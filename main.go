@@ -4,8 +4,13 @@ import (
 	"embed"
 	_ "embed"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/eryalito/pinthenote/internal/database"
+	"github.com/eryalito/pinthenote/internal/repository"
+	"github.com/eryalito/pinthenote/internal/services"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -24,11 +29,23 @@ func init() {
 	application.RegisterEvent[string]("time")
 }
 
-// main function serves as the application's entry point. It initializes the application, creates a window,
-// and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
-// logs any error that might occur.
+// main function serves as the application's entry point. It initializes the database,
+// creates a window, and starts a goroutine that emits a time-based event every second.
+// It subsequently runs the application and logs any error that might occur.
 func main() {
+	// Initialize database before anything else
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal("Failed to get home directory:", err)
+	}
+	dbPath := filepath.Join(homeDir, ".pinthenote", "app.db")
+	db, err := database.InitDB(dbPath)
+	if err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+	defer database.CloseDB(db)
 
+	noteReposiroty := repository.NewNoteRepository(db)
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.
 	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
@@ -38,7 +55,9 @@ func main() {
 		Name:        "pinthenote",
 		Description: "A demo of using raw HTML & CSS",
 		Services: []application.Service{
-			application.NewService(&GreetService{}),
+			application.NewService(&services.NotesService{
+				NotesRepository: noteReposiroty,
+			}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -47,6 +66,8 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
+	windowService := services.NewWindowService(app, noteReposiroty)
+	windowService.RegisterEventHandlers()
 
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.
@@ -64,6 +85,17 @@ func main() {
 		URL:              "/",
 	})
 
+	// Load all notes and create a window for each one
+
+	notes, err := noteReposiroty.GetAllWithWindowState()
+	if err != nil {
+		log.Println("Failed to load notes:", err)
+	}
+
+	for _, note := range notes {
+		windowService.CreateWindowForNote(note)
+	}
+
 	// Create a goroutine that emits an event containing the current time every second.
 	// The frontend can listen to this event and update the UI accordingly.
 	go func() {
@@ -75,7 +107,7 @@ func main() {
 	}()
 
 	// Run the application. This blocks until the application has been exited.
-	err := app.Run()
+	err = app.Run()
 
 	// If an error occurred while running the application, log it and exit.
 	if err != nil {
