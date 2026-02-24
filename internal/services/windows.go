@@ -49,6 +49,8 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 		pinned = note.WindowState.Pinned
 	}
 
+	x, y, width, height = s.normaliseWindowBounds(x, y, width, height)
+
 	w := s.app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:           note.Title,
 		Width:           width,
@@ -90,6 +92,41 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	})
 
 	return w
+}
+
+func (s *WindowService) normaliseWindowBounds(x, y, width, height int) (int, int, int, int) {
+	primary := s.app.Screen.GetPrimary()
+	if primary == nil {
+		return x, y, width, height
+	}
+
+	bounds := primary.Bounds
+	maxWidth := bounds.Width
+	maxHeight := bounds.Height
+
+	if maxWidth <= 0 {
+		maxWidth = primary.WorkArea.Width
+	}
+	if maxHeight <= 0 {
+		maxHeight = primary.WorkArea.Height
+	}
+
+	if maxWidth <= 0 || maxHeight <= 0 {
+		return x, y, width, height
+	}
+
+	isOutOfScreen := width <= 0 ||
+		height <= 0 ||
+		x < bounds.X ||
+		y < bounds.Y ||
+		x+width > bounds.X+bounds.Width ||
+		y+height > bounds.Y+bounds.Height
+
+	if isOutOfScreen {
+		return 0, 0, maxWidth, maxHeight
+	}
+
+	return x, y, width, height
 }
 
 func (s *WindowService) RegisterEventHandlers() {

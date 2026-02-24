@@ -70,13 +70,13 @@ export default function NoteView() {
   };
 
   return (
-    <main style={{ minHeight: "100vh", position: "relative", padding: "2rem" }}>
+    <main style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
       <div
         style={{
           position: "fixed",
           top: 0,
-          left: 0,
-          right: 0,
+          left: "6px",
+          right: "6px",
           height: "12px",
           zIndex: 100,
         }}
@@ -88,9 +88,9 @@ export default function NoteView() {
         onMouseLeave={() => setShowNav(false)}
         style={{
           position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
+          top: "6px",
+          left: "6px",
+          right: "6px",
           height: "44px",
           display: "flex",
           alignItems: "center",
@@ -99,6 +99,7 @@ export default function NoteView() {
           background: "rgba(27, 38, 54, 0.88)",
           backdropFilter: "blur(8px)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
+          borderRadius: "8px",
           transform: showNav ? "translateY(0)" : "translateY(-100%)",
           transition: "transform 160ms ease",
           zIndex: 101,
@@ -148,8 +149,19 @@ export default function NoteView() {
         </button>
       </nav>
 
-      <h1 style={{ marginTop: "2.5rem" }}>{note.title}</h1>
-      <p>{note.content}</p>
+      <div
+        style={{
+          height: "100%",
+          overflowY: "auto",
+          boxSizing: "border-box",
+          padding: "2rem",
+          paddingTop: "2.5rem",
+          marginRight: "8px",
+        }}
+      >
+        <h1>{note.title}</h1>
+        <p>{note.content}</p>
+      </div>
     </main>
   );
 }
