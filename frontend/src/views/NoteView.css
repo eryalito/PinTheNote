@@ -1,0 +1,229 @@
+body {
+    --wails-resize: all;
+}
+
+.note-main {
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.note-nav-trigger {
+  position: fixed;
+  top: 0;
+  left: 6px;
+  right: 6px;
+  height: 12px;
+  z-index: 100;
+}
+
+.note-nav {
+  position: fixed;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: rgba(27, 38, 54, 0.88);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  transition: transform 160ms ease;
+  z-index: 101;
+  --wails-draggable: drag;
+}
+
+.note-nav.hidden {
+  transform: translateY(-100%);
+}
+
+.note-nav.visible {
+  transform: translateY(0);
+}
+
+.note-nav-button {
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+  --wails-draggable: none;
+}
+
+.note-nav-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.note-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  --wails-draggable: none;
+}
+
+.note-title {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.note-nav-action-btn {
+  width: 70px;
+  height: 30px;
+  margin: 0;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+  --wails-draggable: none;
+}
+
+.note-nav-action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.note-nav-action-btn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.note-content {
+  height: 100%;
+  box-sizing: border-box;
+  padding-top: 50px;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.note-content.editing {
+  overflow-y: hidden;
+  padding: 8px;
+  padding-top: 50px;
+}
+
+.note-content.viewing {
+  padding: 2rem;
+  padding-top: 50px;
+}
+
+.note-textarea {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  padding: 12px;
+  resize: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.note-markdown {
+  width: 100%;
+}
+
+/* Markdown styling */
+.note-markdown h1 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.note-markdown h2 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.4rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.note-markdown h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.3rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.note-markdown p {
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+}
+
+.note-markdown ul,
+.note-markdown ol {
+  margin-bottom: 0.8rem;
+  margin-left: 1.5rem;
+}
+
+.note-markdown li {
+  margin-bottom: 0.3rem;
+  line-height: 1.6;
+}
+
+.note-markdown code {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.note-markdown pre {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px;
+  border-radius: 6px;
+  overflow: auto;
+  margin-bottom: 0.8rem;
+}
+
+.note-markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.note-markdown blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-bottom: 0.8rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.note-markdown a {
+  color: rgba(100, 200, 255, 1);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.note-markdown strong {
+  font-weight: bold;
+  color: rgba(255, 255, 255, 1);
+}
+
+.note-markdown em {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.note-markdown hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 1.5rem 0;
+}
+
+.loading-container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}

@@ -52,14 +52,17 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	x, y, width, height = s.normaliseWindowBounds(x, y, width, height)
 
 	w := s.app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:           note.Title,
-		Width:           width,
-		Height:          height,
-		InitialPosition: application.WindowXY,
-		X:               x,
-		Y:               y,
-		AlwaysOnTop:     pinned,
-		Frameless:       true,
+		Title:              note.Title,
+		Width:              width,
+		Height:             height,
+		InitialPosition:    application.WindowXY,
+		X:                  x,
+		Y:                  y,
+		AlwaysOnTop:        pinned,
+		Frameless:          true,
+		MinWidth:           200,
+		MinHeight:          200,
+		ZoomControlEnabled: true,
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
