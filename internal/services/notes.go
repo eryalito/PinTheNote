@@ -23,6 +23,10 @@ func (s *NotesService) CreateNote(title, content string) error {
 	return s.NotesRepository.CreateWithDeps(note)
 }
 
+func (s *NotesService) UpdateNote(note *models.Note) error {
+	return s.NotesRepository.Update(note)
+}
+
 func (s *NotesService) RetrieveNote(id uint) (*models.Note, error) {
 	return s.NotesRepository.GetByIDWithWindowState(id)
 }

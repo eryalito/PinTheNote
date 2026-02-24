@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Events } from "@wailsio/runtime";
+import { marked } from "marked";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
 import { Note } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 
@@ -10,6 +11,9 @@ export default function NoteView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNav, setShowNav] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftContent, setDraftContent] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +40,7 @@ export default function NoteView() {
 
         if (!cancelled) {
           setNote(data ?? null);
+          setDraftContent(data?.content ?? "");
         }
       } catch {
         if (!cancelled) setError("Failed to load note.");
@@ -69,6 +74,33 @@ export default function NoteView() {
     });
   };
 
+  const toggleEditMode = async () => {
+    if (!isEditing) {
+      setDraftContent(note.content ?? "");
+      setIsEditing(true);
+      return;
+    }
+
+    setIsEditing(false);
+  };
+
+  const saveDraft = async () => {
+    if (draftContent !== (note.content ?? "")) {
+      try {
+        setSaving(true);
+        const updatedNote = new Note({ ...note, content: draftContent });
+        await NotesService.UpdateNote(updatedNote);
+        setNote(updatedNote);
+      } catch {
+        setError("Failed to save note.");
+        return;
+      } finally {
+        setSaving(false);
+      }
+    }
+    setIsEditing(false);
+  };
+
   return (
     <main style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
       <div
@@ -85,7 +117,7 @@ export default function NoteView() {
 
       <nav
         onMouseEnter={() => setShowNav(true)}
-        onMouseLeave={() => setShowNav(false)}
+        onMouseLeave={() => !isEditing && setShowNav(false)}
         style={{
           position: "fixed",
           top: "6px",
@@ -100,7 +132,7 @@ export default function NoteView() {
           backdropFilter: "blur(8px)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
           borderRadius: "8px",
-          transform: showNav ? "translateY(0)" : "translateY(-100%)",
+          transform: isEditing || showNav ? "translateY(0)" : "translateY(-100%)",
           transition: "transform 160ms ease",
           zIndex: 101,
           "--wails-draggable": "drag",
@@ -126,7 +158,62 @@ export default function NoteView() {
           📌
         </button>
 
-        <strong style={{ fontSize: "0.9rem" }}>{note.title}</strong>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            "--wails-draggable": "none",
+          } as any}
+        >
+          <strong style={{ fontSize: "0.9rem" }}>{note.title}</strong>
+          <button
+            onClick={() => {
+              void toggleEditMode();
+            }}
+            style={{
+              width: "70px",
+              height: "30px",
+              margin: 0,
+              padding: "0 8px",
+              borderRadius: "6px",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              background: "rgba(255, 255, 255, 0.08)",
+              color: "inherit",
+              cursor: "pointer",
+              "--wails-draggable": "none",
+            } as any}
+            title={isEditing ? "Cancel" : "Edit"}
+            aria-label={isEditing ? "Cancel" : "Edit"}
+          >
+            {isEditing ? "Cancel" : "Edit"}
+          </button>
+          {isEditing && (
+            <button
+              onClick={() => {
+                void saveDraft();
+              }}
+              disabled={saving}
+              style={{
+                width: "70px",
+                height: "30px",
+                margin: 0,
+                padding: "0 8px",
+                borderRadius: "6px",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                background: "rgba(255, 255, 255, 0.08)",
+                color: "inherit",
+                cursor: saving ? "default" : "pointer",
+                opacity: saving ? 0.7 : 1,
+                "--wails-draggable": "none",
+              } as any}
+              title="Save"
+              aria-label="Save"
+            >
+              {saving ? "Saving" : "Save"}
+            </button>
+          )}
+        </div>
 
         <button
           onClick={() => emitWindowAction("close")}
@@ -152,15 +239,34 @@ export default function NoteView() {
       <div
         style={{
           height: "100%",
-          overflowY: "auto",
+          overflowY: isEditing ? "hidden" : "auto",
           boxSizing: "border-box",
-          padding: "2rem",
-          paddingTop: "2.5rem",
-          marginRight: "8px",
+          padding: isEditing ? "8px" : "2rem",
+          paddingTop: "50px",
+          width: "100%",
         }}
       >
-        <h1>{note.title}</h1>
-        <p>{note.content}</p>
+        {isEditing ? (
+          <textarea
+            value={draftContent}
+            onChange={(event) => setDraftContent(event.target.value)}
+            style={{
+              width: "100%",
+              height: "100%",
+              boxSizing: "border-box",
+              borderRadius: "8px",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              background: "rgba(255, 255, 255, 0.06)",
+              color: "inherit",
+              padding: "12px",
+              resize: "none",
+            }}
+          />
+        ) : (
+          <div
+            dangerouslySetInnerHTML={{ __html: marked(note.content ?? "") }}
+          />
+        )}
       </div>
     </main>
   );

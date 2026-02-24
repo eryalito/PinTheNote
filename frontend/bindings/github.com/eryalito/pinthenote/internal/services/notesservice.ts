@@ -19,6 +19,10 @@ export function RetrieveNote(id: number): $CancellablePromise<models$0.Note | nu
     });
 }
 
+export function UpdateNote(note: models$0.Note | null): $CancellablePromise<void> {
+    return $Call.ByID(2274292440, note);
+}
+
 // Private type creation functions
 const $$createType0 = models$0.Note.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
