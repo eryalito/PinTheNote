@@ -10,18 +10,17 @@ body {
 
 .note-nav-trigger {
   position: fixed;
-  top: 0;
+  top: 6px;
   left: 6px;
   right: 6px;
-  height: 12px;
+  height: 22px;
   z-index: 100;
 }
 
 .note-nav {
   position: fixed;
-  top: 6px;
-  left: 6px;
-  right: 6px;
+  left: 0px;
+  right: 0px;
   height: 44px;
   display: flex;
   align-items: center;
@@ -29,8 +28,7 @@ body {
   padding: 0 12px;
   background: rgba(27, 38, 54, 0.88);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border-bottom: 4px solid rgba(26, 29, 34, 0.88);
   transition: transform 160ms ease;
   z-index: 101;
   --wails-draggable: drag;
@@ -98,20 +96,20 @@ body {
 .note-content {
   height: 100%;
   box-sizing: border-box;
-  padding-top: 50px;
+  padding-top: 44px;
+  padding: 8px;
   width: 100%;
   overflow-y: auto;
 }
 
 .note-content.editing {
   overflow-y: hidden;
-  padding: 8px;
-  padding-top: 50px;
+  padding-top: 44px;
 }
 
 .note-content.viewing {
-  padding: 2rem;
-  padding-top: 50px;
+  padding-top: 22px;
+  padding: 12px
 }
 
 .note-textarea {

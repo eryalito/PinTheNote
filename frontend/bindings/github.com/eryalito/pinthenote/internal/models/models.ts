@@ -19,6 +19,8 @@ export class Note {
     "DeletedAt": gorm$0.DeletedAt;
     "title": string;
     "content": string;
+    "color": string;
+    "text_color": string;
     "window_state": WindowState | null;
 
     /** Creates a new Note instance. */
@@ -41,6 +43,12 @@ export class Note {
         if (!("content" in $$source)) {
             this["content"] = "";
         }
+        if (!("color" in $$source)) {
+            this["color"] = "";
+        }
+        if (!("text_color" in $$source)) {
+            this["text_color"] = "";
+        }
         if (!("window_state" in $$source)) {
             this["window_state"] = null;
         }
@@ -52,10 +60,10 @@ export class Note {
      * Creates a new Note instance from a string or object.
      */
     static createFrom($$source: any = {}): Note {
-        const $$createField6_0 = $$createType1;
+        const $$createField8_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("window_state" in $$parsedSource) {
-            $$parsedSource["window_state"] = $$createField6_0($$parsedSource["window_state"]);
+            $$parsedSource["window_state"] = $$createField8_0($$parsedSource["window_state"]);
         }
         return new Note($$parsedSource as Partial<Note>);
     }

@@ -40,6 +40,11 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	x := 0
 	y := 0
 	pinned := false
+	hexColor := "#ffffff"
+	if note.Color != "" {
+		hexColor = note.Color
+	}
+	r, g, b := hexToRGB(hexColor)
 
 	if note.WindowState != nil {
 		width = note.WindowState.Width
@@ -68,7 +73,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
-		BackgroundColour: application.NewRGB(27, 38, 54),
+		BackgroundColour: application.NewRGB(r, g, b),
 		URL:              "/note/" + strconv.FormatUint(uint64(note.ID), 10),
 	})
 
@@ -263,4 +268,23 @@ func parseWindowActionEventData(data any) (action string, noteID uint, err error
 	}
 
 	return actionValue, uint(noteIDValue), nil
+}
+
+func hexToRGB(hex string) (r, g, b uint8) {
+	if len(hex) != 7 || hex[0] != '#' {
+		return 255, 255, 255
+	}
+	rVal, err := strconv.ParseInt(hex[1:3], 16, 0)
+	if err != nil {
+		return 255, 255, 255
+	}
+	gVal, err := strconv.ParseInt(hex[3:5], 16, 0)
+	if err != nil {
+		return 255, 255, 255
+	}
+	bVal, err := strconv.ParseInt(hex[5:7], 16, 0)
+	if err != nil {
+		return 255, 255, 255
+	}
+	return uint8(rVal), uint8(gVal), uint8(bVal)
 }

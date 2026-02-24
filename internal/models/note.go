@@ -8,6 +8,8 @@ type Note struct {
 	gorm.Model
 	Title       string       `gorm:"column:title;size:255;not null" json:"title"`
 	Content     string       `gorm:"column:content;not null" json:"content"`
+	Color       string       `gorm:"column:color;size:20;not null;default:'#FFEBA1'" json:"color"`
+	TextColor   string       `gorm:"column:text_color;size:20;not null;default:'#000000'" json:"text_color"`
 	WindowState *WindowState `gorm:"foreignKey:NoteID;constraint:OnDelete:CASCADE" json:"window_state"`
 }
 

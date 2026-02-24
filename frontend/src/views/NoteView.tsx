@@ -103,7 +103,7 @@ export default function NoteView() {
     };
 
     return (
-        <main className="note-main">
+        <main className="note-main" style={{ backgroundColor: note.color, color: note.text_color }}>
             <div
                 className="note-nav-trigger"
                 onMouseEnter={() => setShowNav(true)}
@@ -113,6 +113,7 @@ export default function NoteView() {
                 onMouseEnter={() => setShowNav(true)}
                 onMouseLeave={() => !isEditing && setShowNav(false)}
                 className={`note-nav ${isEditing || showNav ? "visible" : "hidden"}`}
+                style={{ backgroundColor: "rgba(27, 38, 54, 0.88)" }}
             >
                 <button
                     onClick={() => emitWindowAction("pin")}
