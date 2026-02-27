@@ -46,6 +46,7 @@ func main() {
 	defer database.CloseDB(db)
 
 	noteReposiroty := repository.NewNoteRepository(db)
+	categoryRepository := repository.NewCategoryRepository(db)
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.
 	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
@@ -56,7 +57,8 @@ func main() {
 		Description: "A demo of using raw HTML & CSS",
 		Services: []application.Service{
 			application.NewService(&services.NotesService{
-				NotesRepository: noteReposiroty,
+				NotesRepository:    noteReposiroty,
+				CategoryRepository: categoryRepository,
 			}),
 		},
 		Assets: application.AssetOptions{
@@ -68,6 +70,7 @@ func main() {
 	})
 	windowService := services.NewWindowService(app, noteReposiroty)
 	windowService.RegisterEventHandlers()
+	app.RegisterService(application.NewService(windowService))
 
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.

@@ -32,7 +32,7 @@ func InitDB(dbPath string) (*gorm.DB, error) {
 	log.Println("Database connected successfully")
 
 	// Auto-migrate models (order matters for foreign keys)
-	err = db.AutoMigrate(&models.WindowState{}, &models.Note{})
+	err = db.AutoMigrate(&models.Category{}, &models.WindowState{}, &models.Note{})
 	if err != nil {
 		return nil, err
 	}

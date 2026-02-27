@@ -12,6 +12,47 @@ import * as gorm$0 from "../../../../../gorm.io/gorm/models.js";
 // @ts-ignore: Unused imports
 import * as time$0 from "../../../../../time/models.js";
 
+export class Category {
+    "ID": number;
+    "CreatedAt": time$0.Time;
+    "UpdatedAt": time$0.Time;
+    "DeletedAt": gorm$0.DeletedAt;
+    "name": string;
+    "color": string;
+
+    /** Creates a new Category instance. */
+    constructor($$source: Partial<Category> = {}) {
+        if (!("ID" in $$source)) {
+            this["ID"] = 0;
+        }
+        if (!("CreatedAt" in $$source)) {
+            this["CreatedAt"] = null;
+        }
+        if (!("UpdatedAt" in $$source)) {
+            this["UpdatedAt"] = null;
+        }
+        if (!("DeletedAt" in $$source)) {
+            this["DeletedAt"] = null;
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("color" in $$source)) {
+            this["color"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Category instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Category {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Category($$parsedSource as Partial<Category>);
+    }
+}
+
 export class Note {
     "ID": number;
     "CreatedAt": time$0.Time;
@@ -21,6 +62,8 @@ export class Note {
     "content": string;
     "color": string;
     "text_color": string;
+    "category_id": number | null;
+    "category": Category | null;
     "window_state": WindowState | null;
 
     /** Creates a new Note instance. */
@@ -49,6 +92,12 @@ export class Note {
         if (!("text_color" in $$source)) {
             this["text_color"] = "";
         }
+        if (!("category_id" in $$source)) {
+            this["category_id"] = null;
+        }
+        if (!("category" in $$source)) {
+            this["category"] = null;
+        }
         if (!("window_state" in $$source)) {
             this["window_state"] = null;
         }
@@ -60,10 +109,14 @@ export class Note {
      * Creates a new Note instance from a string or object.
      */
     static createFrom($$source: any = {}): Note {
-        const $$createField8_0 = $$createType1;
+        const $$createField9_0 = $$createType1;
+        const $$createField10_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("category" in $$parsedSource) {
+            $$parsedSource["category"] = $$createField9_0($$parsedSource["category"]);
+        }
         if ("window_state" in $$parsedSource) {
-            $$parsedSource["window_state"] = $$createField8_0($$parsedSource["window_state"]);
+            $$parsedSource["window_state"] = $$createField10_0($$parsedSource["window_state"]);
         }
         return new Note($$parsedSource as Partial<Note>);
     }
@@ -131,5 +184,7 @@ export class WindowState {
 }
 
 // Private type creation functions
-const $$createType0 = WindowState.createFrom;
+const $$createType0 = Category.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
+const $$createType2 = WindowState.createFrom;
+const $$createType3 = $Create.Nullable($$createType2);

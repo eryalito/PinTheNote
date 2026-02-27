@@ -9,13 +9,47 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as models$0 from "../models/models.js";
 
+export function CreateCategory(name: string, color: string): $CancellablePromise<models$0.Category | null> {
+    return $Call.ByID(3699248769, name, color).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 export function CreateNote(title: string, content: string): $CancellablePromise<void> {
     return $Call.ByID(4255321037, title, content);
 }
 
+export function CreateNoteInCategory(categoryID: number, color: string): $CancellablePromise<models$0.Note | null> {
+    return $Call.ByID(367115934, categoryID, color).then(($result: any) => {
+        return $$createType3($result);
+    });
+}
+
+export function DeleteCategory(id: number): $CancellablePromise<void> {
+    return $Call.ByID(3907711498, id);
+}
+
+export function RetrieveCategories(): $CancellablePromise<models$0.Category[]> {
+    return $Call.ByID(3010397633).then(($result: any) => {
+        return $$createType4($result);
+    });
+}
+
+export function RetrieveCategory(id: number): $CancellablePromise<models$0.Category | null> {
+    return $Call.ByID(1087751181, id).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 export function RetrieveNote(id: number): $CancellablePromise<models$0.Note | null> {
     return $Call.ByID(3973604553, id).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType3($result);
+    });
+}
+
+export function RetrieveNotesByCategory(categoryID: number): $CancellablePromise<models$0.Note[]> {
+    return $Call.ByID(3167182683, categoryID).then(($result: any) => {
+        return $$createType5($result);
     });
 }
 
@@ -24,5 +58,9 @@ export function UpdateNote(note: models$0.Note | null): $CancellablePromise<void
 }
 
 // Private type creation functions
-const $$createType0 = models$0.Note.createFrom;
+const $$createType0 = models$0.Category.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
+const $$createType2 = models$0.Note.createFrom;
+const $$createType3 = $Create.Nullable($$createType2);
+const $$createType4 = $Create.Array($$createType0);
+const $$createType5 = $Create.Array($$createType2);

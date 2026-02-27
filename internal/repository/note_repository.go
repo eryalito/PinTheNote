@@ -75,7 +75,7 @@ func (r *NoteRepository) Count() (int64, error) {
 // GetByIDWithWindowState retrieves a note with its associated WindowState
 func (r *NoteRepository) GetByIDWithWindowState(id uint) (*models.Note, error) {
 	var note models.Note
-	err := r.db.Preload("WindowState").First(&note, id).Error
+	err := r.db.Preload("WindowState").Preload("Category").First(&note, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -85,10 +85,30 @@ func (r *NoteRepository) GetByIDWithWindowState(id uint) (*models.Note, error) {
 // GetAllWithWindowState retrieves all notes with their associated WindowStates
 func (r *NoteRepository) GetAllWithWindowState() ([]models.Note, error) {
 	var notes []models.Note
-	err := r.db.Preload("WindowState").Find(&notes).Error
+	err := r.db.Preload("WindowState").Preload("Category").Find(&notes).Error
 	if err != nil {
 		return nil, err
 	}
+	return notes, nil
+}
+
+// GetAllByCategory retrieves all notes that belong to a category.
+// If categoryID is nil, it returns uncategorized notes.
+func (r *NoteRepository) GetAllByCategory(categoryID *uint) ([]models.Note, error) {
+	var notes []models.Note
+
+	query := r.db.Preload("WindowState").Preload("Category")
+	if categoryID == nil {
+		query = query.Where("category_id IS NULL")
+	} else {
+		query = query.Where("category_id = ?", *categoryID)
+	}
+
+	err := query.Find(&notes).Error
+	if err != nil {
+		return nil, err
+	}
+
 	return notes, nil
 }
 
