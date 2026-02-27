@@ -122,11 +122,29 @@
 }
 
 .note-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin: 6px 0;
 }
 
 .note-title {
   color: #f5f7fb;
+}
+
+.note-display-btn {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.note-display-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
 
 .modal-overlay {

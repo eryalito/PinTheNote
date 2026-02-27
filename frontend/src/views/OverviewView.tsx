@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
-import { NotesService, WindowService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
-import { Category, Note } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
+import { Events } from "@wailsio/runtime";
+import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
+import { Category, Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import CategorySection from "./overview/components/CategorySection";
 import CreateCategoryModal from "./overview/components/CreateCategoryModal";
 import "./OverviewView.css";
@@ -18,6 +19,7 @@ function OverviewView() {
   const [creatingCategory, setCreatingCategory] = useState(false);
   const [deletingCategoryID, setDeletingCategoryID] = useState<number | null>(null);
   const [creatingNoteByCategory, setCreatingNoteByCategory] = useState<Record<number, boolean>>({});
+  const [displayingNoteByID, setDisplayingNoteByID] = useState<Record<number, boolean>>({});
   const [openCategories, setOpenCategories] = useState<Record<number, boolean>>({});
   const [notesByCategory, setNotesByCategory] = useState<NotesByCategoryState>({});
   const [loadingNotesByCategory, setLoadingNotesByCategory] = useState<LoadingByCategoryState>({});
@@ -37,6 +39,46 @@ function OverviewView() {
 
   useEffect(() => {
     void loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = Events.On("note:visibility-changed", (event: any) => {
+      const payload = event?.data;
+      const noteID = Number(payload?.noteId);
+      const visible = payload?.visible === true;
+
+      if (!Number.isFinite(noteID)) {
+        return;
+      }
+
+      setNotesByCategory((prev) => {
+        const next: NotesByCategoryState = { ...prev };
+
+        for (const key of Object.keys(next)) {
+          const categoryID = Number(key);
+          next[categoryID] = next[categoryID].map((item) => {
+            if (item.ID !== noteID) {
+              return item;
+            }
+
+            return new Note({
+              ...item,
+              window_state: new WindowState({
+                ...(item.window_state ?? {}),
+                note_id: item.ID,
+                visible,
+              }),
+            });
+          });
+        }
+
+        return next;
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const loadNotesForCategory = async (categoryID: number) => {
@@ -108,7 +150,10 @@ function OverviewView() {
       setCreatingNoteByCategory((prev) => ({ ...prev, [categoryID]: true }));
       const createdNote = await NotesService.CreateNoteInCategory(categoryID, color);
       if (createdNote) {
-        await WindowService.CreateWindowForNote(createdNote);
+        await Events.Emit("note:window-action", {
+          action: "show",
+          noteId: createdNote.ID,
+        });
       }
       setOpenCategories((prev) => ({ ...prev, [categoryID]: true }));
       await loadNotesForCategory(categoryID);
@@ -116,6 +161,22 @@ function OverviewView() {
       setError("Failed to create note.");
     } finally {
       setCreatingNoteByCategory((prev) => ({ ...prev, [categoryID]: false }));
+    }
+  };
+
+  const onToggleNoteVisibility = async (note: Note) => {
+    try {
+      setError(null);
+      setDisplayingNoteByID((prev) => ({ ...prev, [note.ID]: true }));
+      const isVisible = note.window_state?.visible === true;
+      await Events.Emit("note:window-action", {
+        action: isVisible ? "close" : "show",
+        noteId: note.ID,
+      });
+    } catch {
+      setError("Failed to update note visibility.");
+    } finally {
+      setDisplayingNoteByID((prev) => ({ ...prev, [note.ID]: false }));
     }
   };
 
@@ -156,6 +217,7 @@ function OverviewView() {
                 isLoadingNotes={isLoadingNotes}
                 isDeleting={isDeleting}
                 isCreatingNote={isCreatingNote}
+                displayingNoteByID={displayingNoteByID}
                 onToggle={(categoryID, isNowOpen) => {
                   void onToggleCategory(categoryID, isNowOpen);
                 }}
@@ -164,6 +226,9 @@ function OverviewView() {
                 }}
                 onCreateNote={(categoryID, color) => {
                   void onCreateNoteInCategory(categoryID, color);
+                }}
+                onToggleNoteVisibility={(noteToDisplay) => {
+                  void onToggleNoteVisibility(noteToDisplay);
                 }}
               />
             );

@@ -35,6 +35,16 @@ func NewWindowService(app *application.App, noteRepository *repository.NoteRepos
 }
 
 func (s *WindowService) CreateWindowForNote(note models.Note) *application.WebviewWindow {
+	s.mu.RLock()
+	existingWindow, exists := s.windowsByNote[note.ID]
+	s.mu.RUnlock()
+	if exists && existingWindow != nil {
+		if err := s.setNoteVisibility(note.ID, true); err != nil {
+			log.Println("failed to set note visible:", err)
+		}
+		return existingWindow
+	}
+
 	width := 200
 	height := 200
 	x := 0
@@ -80,12 +90,20 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	s.mu.Lock()
 	s.windowsByNote[note.ID] = w
 	s.noteByWindow[w] = note.ID
+	if note.WindowState == nil {
+		note.WindowState = &models.WindowState{}
+	}
+	note.WindowState.Visible = true
 	if note.WindowState != nil {
 		s.stateByNote[note.ID] = note.WindowState
 	} else {
 		s.stateByNote[note.ID] = &models.WindowState{}
 	}
 	s.mu.Unlock()
+
+	if err := s.setNoteVisibility(note.ID, true); err != nil {
+		log.Println("failed to persist note visibility:", err)
+	}
 
 	w.OnWindowEvent(events.Common.WindowDidMove, func(event *application.WindowEvent) {
 		s.scheduleWindowStatePersist(note.ID, w)
@@ -96,7 +114,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	})
 
 	w.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
-		s.unregisterNoteWindow(note.ID)
+		s.handleWindowClosing(note.ID)
 	})
 
 	return w
@@ -152,25 +170,38 @@ func (s *WindowService) RegisterEventHandlers() {
 }
 
 func (s *WindowService) HandleWindowAction(action string, noteID uint) error {
-	s.mu.Lock()
-	w, ok := s.windowsByNote[noteID]
-	if !ok || w == nil {
-		s.mu.Unlock()
-		return fmt.Errorf("window not found for note %d", noteID)
-	}
-
-	ws, ok := s.stateByNote[noteID]
-	if !ok || ws == nil {
-		ws = &models.WindowState{}
-		s.stateByNote[noteID] = ws
-	}
-	s.mu.Unlock()
-
 	switch action {
+	case "show":
+		note, err := s.noteRepository.GetByIDWithWindowState(noteID)
+		if err != nil {
+			return err
+		}
+		s.CreateWindowForNote(*note)
+		return nil
 	case "close":
+		s.mu.RLock()
+		w, ok := s.windowsByNote[noteID]
+		s.mu.RUnlock()
+		if !ok || w == nil {
+			return s.setNoteVisibility(noteID, false)
+		}
 		w.Close()
 		return nil
 	case "pin":
+		s.mu.Lock()
+		w, ok := s.windowsByNote[noteID]
+		if !ok || w == nil {
+			s.mu.Unlock()
+			return fmt.Errorf("window not found for note %d", noteID)
+		}
+
+		ws, ok := s.stateByNote[noteID]
+		if !ok || ws == nil {
+			ws = &models.WindowState{}
+			s.stateByNote[noteID] = ws
+		}
+		s.mu.Unlock()
+
 		ws.Pinned = !ws.Pinned
 		w.SetAlwaysOnTop(ws.Pinned)
 		if err := s.noteRepository.UpdateWindowState(noteID, ws); err != nil {
@@ -180,6 +211,39 @@ func (s *WindowService) HandleWindowAction(action string, noteID uint) error {
 	default:
 		return fmt.Errorf("unsupported action %q", action)
 	}
+}
+
+func (s *WindowService) handleWindowClosing(noteID uint) {
+	if err := s.setNoteVisibility(noteID, false); err != nil {
+		log.Println("failed to set note invisible on close:", err)
+	}
+	s.unregisterNoteWindow(noteID)
+}
+
+func (s *WindowService) setNoteVisibility(noteID uint, visible bool) error {
+	s.mu.Lock()
+	ws, ok := s.stateByNote[noteID]
+	if !ok || ws == nil {
+		ws = &models.WindowState{}
+		s.stateByNote[noteID] = ws
+	}
+	ws.Visible = visible
+	stateCopy := *ws
+	s.mu.Unlock()
+
+	if err := s.noteRepository.UpdateWindowState(noteID, &stateCopy); err != nil {
+		return err
+	}
+
+	s.emitVisibilityChanged(noteID, visible)
+	return nil
+}
+
+func (s *WindowService) emitVisibilityChanged(noteID uint, visible bool) {
+	s.app.Event.Emit("note:visibility-changed", map[string]any{
+		"noteId":  noteID,
+		"visible": visible,
+	})
 }
 
 func (s *WindowService) GetWindowByNoteID(noteID uint) (*application.WebviewWindow, bool) {

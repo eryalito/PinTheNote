@@ -96,7 +96,13 @@ func main() {
 	}
 
 	for _, note := range notes {
-		windowService.CreateWindowForNote(note)
+		if note.WindowState == nil {
+			log.Printf("Note with ID %d has no window state, skipping\n", note.ID)
+			continue
+		}
+		if note.WindowState.Visible == true {
+			windowService.CreateWindowForNote(note)
+		}
 	}
 
 	// Create a goroutine that emits an event containing the current time every second.

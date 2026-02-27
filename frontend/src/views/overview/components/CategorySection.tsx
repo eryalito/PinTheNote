@@ -7,9 +7,11 @@ type CategorySectionProps = {
   isLoadingNotes: boolean;
   isDeleting: boolean;
   isCreatingNote: boolean;
+  displayingNoteByID: Record<number, boolean>;
   onToggle: (categoryID: number, isOpen: boolean) => void;
   onDelete: (categoryID: number) => void;
   onCreateNote: (categoryID: number, color: string) => void;
+  onToggleNoteVisibility: (note: Note) => void;
 };
 
 export default function CategorySection({
@@ -19,9 +21,11 @@ export default function CategorySection({
   isLoadingNotes,
   isDeleting,
   isCreatingNote,
+  displayingNoteByID,
   onToggle,
   onDelete,
   onCreateNote,
+  onToggleNoteVisibility,
 }: CategorySectionProps) {
   return (
     <details
@@ -75,11 +79,24 @@ export default function CategorySection({
           <div className="notes-empty">No notes in this category.</div>
         ) : (
           <ul className="notes-list">
-            {notes.map((note) => (
-              <li key={note.ID} className="note-row">
-                <span className="note-title">{note.title || "Untitled note"}</span>
-              </li>
-            ))}
+            {notes.map((note) => {
+              const isVisible = note.window_state?.visible ?? false;
+              const isDisplaying = displayingNoteByID[note.ID] ?? false;
+
+              return (
+                <li key={note.ID} className="note-row">
+                  <span className="note-title">{note.title || "Untitled note"}</span>
+                  <button
+                    type="button"
+                    className="note-display-btn"
+                    disabled={isDisplaying}
+                    onClick={() => onToggleNoteVisibility(note)}
+                  >
+                    {isDisplaying ? "Updating..." : (isVisible ? "Hide" : "Display")}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
