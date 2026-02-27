@@ -20,6 +20,15 @@ function OverviewView() {
   const [editingNoteID, setEditingNoteID] = useState<number | null>(null);
   const [editingNoteTitle, setEditingNoteTitle] = useState("");
   const [savingRename, setSavingRename] = useState(false);
+  const [editingNoteColorID, setEditingNoteColorID] = useState<number | null>(null);
+  const [editingNoteColor, setEditingNoteColor] = useState("#FFEBA1");
+  const [savingNoteColor, setSavingNoteColor] = useState(false);
+  const [editingCategoryID, setEditingCategoryID] = useState<number | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [savingCategoryRename, setSavingCategoryRename] = useState(false);
+  const [editingCategoryColorID, setEditingCategoryColorID] = useState<number | null>(null);
+  const [editingCategoryColor, setEditingCategoryColor] = useState("#FFEBA1");
+  const [savingCategoryColor, setSavingCategoryColor] = useState(false);
   const [deletingCategoryID, setDeletingCategoryID] = useState<number | null>(null);
   const [creatingNoteByCategory, setCreatingNoteByCategory] = useState<Record<number, boolean>>({});
   const [displayingNoteByID, setDisplayingNoteByID] = useState<Record<number, boolean>>({});
@@ -188,6 +197,110 @@ function OverviewView() {
     }
   };
 
+  const onStartRenameCategory = (category: Category) => {
+    setEditingCategoryID(category.ID);
+    setEditingCategoryName(category.name ?? "");
+  };
+
+  const onCancelRenameCategory = () => {
+    if (savingCategoryRename) {
+      return;
+    }
+
+    setEditingCategoryID(null);
+    setEditingCategoryName("");
+  };
+
+  const onCommitRenameCategory = async (category: Category) => {
+    if (savingCategoryRename || editingCategoryID !== category.ID) {
+      return;
+    }
+
+    const currentName = category.name ?? "";
+    const nextName = editingCategoryName.trim();
+
+    if (!nextName || nextName === currentName) {
+      setEditingCategoryID(null);
+      setEditingCategoryName("");
+      return;
+    }
+
+    try {
+      setError(null);
+      setSavingCategoryRename(true);
+      const updatedCategory = new Category({ ...category, name: nextName });
+      await NotesService.UpdateCategory(updatedCategory);
+
+      setCategories((prev) =>
+        prev.map((item) => {
+          if (item.ID !== category.ID) {
+            return item;
+          }
+
+          return new Category({ ...item, name: nextName });
+        }),
+      );
+
+      setEditingCategoryID(null);
+      setEditingCategoryName("");
+    } catch {
+      setError("Failed to update category name.");
+    } finally {
+      setSavingCategoryRename(false);
+    }
+  };
+
+  const onStartEditCategoryColor = (category: Category) => {
+    setEditingCategoryColorID(category.ID);
+    setEditingCategoryColor(category.color || "#FFEBA1");
+  };
+
+  const onCancelEditCategoryColor = () => {
+    if (savingCategoryColor) {
+      return;
+    }
+
+    setEditingCategoryColorID(null);
+    setEditingCategoryColor("#FFEBA1");
+  };
+
+  const onCommitCategoryColor = async (category: Category, nextColor: string) => {
+    if (savingCategoryColor || editingCategoryColorID !== category.ID) {
+      return;
+    }
+
+    const currentColor = category.color || "#FFEBA1";
+    if (!nextColor || nextColor === currentColor) {
+      setEditingCategoryColorID(null);
+      setEditingCategoryColor("#FFEBA1");
+      return;
+    }
+
+    try {
+      setError(null);
+      setSavingCategoryColor(true);
+      const updatedCategory = new Category({ ...category, color: nextColor });
+      await NotesService.UpdateCategory(updatedCategory);
+
+      setCategories((prev) =>
+        prev.map((item) => {
+          if (item.ID !== category.ID) {
+            return item;
+          }
+
+          return new Category({ ...item, color: nextColor });
+        }),
+      );
+
+      setEditingCategoryColorID(null);
+      setEditingCategoryColor("#FFEBA1");
+    } catch {
+      setError("Failed to update category color.");
+    } finally {
+      setSavingCategoryColor(false);
+    }
+  };
+
   const onCreateNoteInCategory = async (categoryID: number, color: string) => {
     try {
       setError(null);
@@ -294,6 +407,62 @@ function OverviewView() {
     }
   };
 
+  const onStartEditNoteColor = (note: Note) => {
+    setEditingNoteColorID(note.ID);
+    setEditingNoteColor(note.color || "#FFEBA1");
+  };
+
+  const onCancelEditNoteColor = () => {
+    if (savingNoteColor) {
+      return;
+    }
+
+    setEditingNoteColorID(null);
+    setEditingNoteColor("#FFEBA1");
+  };
+
+  const onCommitNoteColor = async (note: Note, nextColor: string) => {
+    if (savingNoteColor || editingNoteColorID !== note.ID) {
+      return;
+    }
+
+    const currentColor = note.color || "#FFEBA1";
+    if (!nextColor || nextColor === currentColor) {
+      setEditingNoteColorID(null);
+      setEditingNoteColor("#FFEBA1");
+      return;
+    }
+
+    try {
+      setError(null);
+      setSavingNoteColor(true);
+      const updatedNote = new Note({ ...note, color: nextColor });
+      await NotesService.UpdateNote(updatedNote);
+      await Events.Emit("note:updated", { noteId: note.ID });
+
+      setNotesByCategory((prev) => {
+        const next: NotesByCategoryState = { ...prev };
+        for (const key of Object.keys(next)) {
+          const categoryID = Number(key);
+          next[categoryID] = next[categoryID].map((item) => {
+            if (item.ID !== note.ID) {
+              return item;
+            }
+            return new Note({ ...item, color: nextColor });
+          });
+        }
+        return next;
+      });
+
+      setEditingNoteColorID(null);
+      setEditingNoteColor("#FFEBA1");
+    } catch {
+      setError("Failed to update note color.");
+    } finally {
+      setSavingNoteColor(false);
+    }
+  };
+
   return (
     <main className="overview-main">
       <header className="overview-header">
@@ -348,6 +517,28 @@ function OverviewView() {
                 onToggleNotePin={(noteToPin) => {
                   void onToggleNotePin(noteToPin);
                 }}
+                editingCategoryID={editingCategoryID}
+                editingCategoryName={editingCategoryName}
+                savingCategoryRename={savingCategoryRename}
+                editingCategoryColorID={editingCategoryColorID}
+                editingCategoryColor={editingCategoryColor}
+                savingCategoryColor={savingCategoryColor}
+                onStartRenameCategory={(categoryToRename) => {
+                  onStartRenameCategory(categoryToRename);
+                }}
+                onEditingCategoryNameChange={setEditingCategoryName}
+                onCommitRenameCategory={(categoryToRename) => {
+                  void onCommitRenameCategory(categoryToRename);
+                }}
+                onCancelRenameCategory={onCancelRenameCategory}
+                onStartEditCategoryColor={(categoryToEdit) => {
+                  onStartEditCategoryColor(categoryToEdit);
+                }}
+                onEditingCategoryColorChange={setEditingCategoryColor}
+                onCommitCategoryColor={(categoryToEdit, nextColor) => {
+                  void onCommitCategoryColor(categoryToEdit, nextColor);
+                }}
+                onCancelEditCategoryColor={onCancelEditCategoryColor}
                 editingNoteID={editingNoteID}
                 editingNoteTitle={editingNoteTitle}
                 savingRename={savingRename}
@@ -359,6 +550,17 @@ function OverviewView() {
                   void onCommitRenameNote(noteToRename);
                 }}
                 onCancelRenameNote={onCancelRenameNote}
+                editingNoteColorID={editingNoteColorID}
+                editingNoteColor={editingNoteColor}
+                savingNoteColor={savingNoteColor}
+                onStartEditNoteColor={(noteToEdit) => {
+                  onStartEditNoteColor(noteToEdit);
+                }}
+                onEditingNoteColorChange={setEditingNoteColor}
+                onCommitNoteColor={(noteToEdit, nextColor) => {
+                  void onCommitNoteColor(noteToEdit, nextColor);
+                }}
+                onCancelEditNoteColor={onCancelEditNoteColor}
               />
             );
           })

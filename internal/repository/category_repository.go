@@ -36,6 +36,10 @@ func (r *CategoryRepository) GetByID(id uint) (*models.Category, error) {
 	return &category, nil
 }
 
+func (r *CategoryRepository) Update(category *models.Category) error {
+	return r.db.Save(category).Error
+}
+
 func (r *CategoryRepository) Delete(id uint) error {
 	return r.db.Delete(&models.Category{}, id).Error
 }

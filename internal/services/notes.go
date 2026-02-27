@@ -88,6 +88,10 @@ func (s *NotesService) RetrieveCategory(id uint) (*models.Category, error) {
 	return s.CategoryRepository.GetByID(id)
 }
 
+func (s *NotesService) UpdateCategory(category *models.Category) error {
+	return s.CategoryRepository.Update(category)
+}
+
 func (s *NotesService) DeleteCategory(id uint) error {
 	return s.CategoryRepository.Delete(id)
 }

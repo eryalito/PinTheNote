@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Category, Note } from "../../../../bindings/github.com/eryalito/pinthenote/internal/models";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faSlash, faThumbtack } from "@fortawesome/free-solid-svg-icons";
@@ -16,6 +17,20 @@ type CategorySectionProps = {
   onCreateNote: (categoryID: number, color: string) => void;
   onToggleNoteVisibility: (note: Note) => void;
   onToggleNotePin: (note: Note) => void;
+  editingCategoryID: number | null;
+  editingCategoryName: string;
+  savingCategoryRename: boolean;
+  editingCategoryColorID: number | null;
+  editingCategoryColor: string;
+  savingCategoryColor: boolean;
+  onStartRenameCategory: (category: Category) => void;
+  onEditingCategoryNameChange: (value: string) => void;
+  onCommitRenameCategory: (category: Category) => void;
+  onCancelRenameCategory: () => void;
+  onStartEditCategoryColor: (category: Category) => void;
+  onEditingCategoryColorChange: (value: string) => void;
+  onCommitCategoryColor: (category: Category, color: string) => void;
+  onCancelEditCategoryColor: () => void;
   editingNoteID: number | null;
   editingNoteTitle: string;
   savingRename: boolean;
@@ -23,6 +38,13 @@ type CategorySectionProps = {
   onEditingNoteTitleChange: (value: string) => void;
   onCommitRenameNote: (note: Note) => void;
   onCancelRenameNote: () => void;
+  editingNoteColorID: number | null;
+  editingNoteColor: string;
+  savingNoteColor: boolean;
+  onStartEditNoteColor: (note: Note) => void;
+  onEditingNoteColorChange: (value: string) => void;
+  onCommitNoteColor: (note: Note, color: string) => void;
+  onCancelEditNoteColor: () => void;
 };
 
 export default function CategorySection({
@@ -39,6 +61,20 @@ export default function CategorySection({
   onCreateNote,
   onToggleNoteVisibility,
   onToggleNotePin,
+  editingCategoryID,
+  editingCategoryName,
+  savingCategoryRename,
+  editingCategoryColorID,
+  editingCategoryColor,
+  savingCategoryColor,
+  onStartRenameCategory,
+  onEditingCategoryNameChange,
+  onCommitRenameCategory,
+  onCancelRenameCategory,
+  onStartEditCategoryColor,
+  onEditingCategoryColorChange,
+  onCommitCategoryColor,
+  onCancelEditCategoryColor,
   editingNoteID,
   editingNoteTitle,
   savingRename,
@@ -46,7 +82,31 @@ export default function CategorySection({
   onEditingNoteTitleChange,
   onCommitRenameNote,
   onCancelRenameNote,
+  editingNoteColorID,
+  editingNoteColor,
+  savingNoteColor,
+  onStartEditNoteColor,
+  onEditingNoteColorChange,
+  onCommitNoteColor,
+  onCancelEditNoteColor,
 }: CategorySectionProps) {
+  const isEditingCategory = editingCategoryID === category.ID;
+  const isEditingCategoryColor = editingCategoryColorID === category.ID;
+  const colorInputRef = useRef<HTMLInputElement | null>(null);
+  const noteColorInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (isEditingCategoryColor) {
+      colorInputRef.current?.click();
+    }
+  }, [isEditingCategoryColor]);
+
+  useEffect(() => {
+    if (editingNoteColorID !== null && notes.some((item) => item.ID === editingNoteColorID)) {
+      noteColorInputRef.current?.click();
+    }
+  }, [editingNoteColorID, notes]);
+
   return (
     <details
       key={category.ID}
@@ -58,12 +118,82 @@ export default function CategorySection({
       }}
     >
       <summary className="category-summary">
-        <span
-          className="category-color"
-          style={{ backgroundColor: category.color }}
-          aria-hidden="true"
-        />
-        <span className="category-name">{category.name}</span>
+        {isEditingCategoryColor ? (
+          <input
+            ref={colorInputRef}
+            type="color"
+            className="category-color-input"
+            value={editingCategoryColor}
+            onChange={(event) => {
+              onEditingCategoryColorChange(event.target.value);
+            }}
+            onBlur={() => onCommitCategoryColor(category, editingCategoryColor)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                onCancelEditCategoryColor();
+              }
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            onMouseDown={(event) => {
+              event.stopPropagation();
+            }}
+            disabled={savingCategoryColor}
+            autoFocus
+          />
+        ) : (
+          <span
+            className="category-color"
+            style={{ backgroundColor: category.color }}
+            aria-hidden="true"
+            onDoubleClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onStartEditCategoryColor(category);
+            }}
+            title="Double click to edit color"
+          />
+        )}
+        {isEditingCategory ? (
+          <input
+            className="category-name-input"
+            value={editingCategoryName}
+            onChange={(event) => onEditingCategoryNameChange(event.target.value)}
+            onBlur={() => onCommitRenameCategory(category)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                onCommitRenameCategory(category);
+              }
+              if (event.key === "Escape") {
+                event.preventDefault();
+                onCancelRenameCategory();
+              }
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            onMouseDown={(event) => {
+              event.stopPropagation();
+            }}
+            disabled={savingCategoryRename}
+            autoFocus
+          />
+        ) : (
+          <span
+            className="category-name"
+            onDoubleClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onStartRenameCategory(category);
+            }}
+            title="Double click to rename"
+          >
+            {category.name}
+          </span>
+        )}
         <div className="category-actions">
           <button
             type="button"
@@ -105,14 +235,48 @@ export default function CategorySection({
               const isPinned = note.window_state?.pinned ?? false;
               const isPinning = pinningNoteByID[note.ID] ?? false;
               const isEditing = editingNoteID === note.ID;
+              const isEditingNoteColor = editingNoteColorID === note.ID;
 
               return (
                 <li key={note.ID} className="note-row">
-                  <span
-                    className="note-color"
-                    style={{ backgroundColor: note.color || "#FFEBA1" }}
-                    aria-hidden="true"
-                  />
+                  {isEditingNoteColor ? (
+                    <input
+                      ref={noteColorInputRef}
+                      type="color"
+                      className="note-color-input"
+                      value={editingNoteColor}
+                      onChange={(event) => {
+                        onEditingNoteColorChange(event.target.value);
+                      }}
+                      onBlur={() => onCommitNoteColor(note, editingNoteColor)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          onCancelEditNoteColor();
+                        }
+                      }}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                      }}
+                      onMouseDown={(event) => {
+                        event.stopPropagation();
+                      }}
+                      disabled={savingNoteColor}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="note-color"
+                      style={{ backgroundColor: note.color || "#FFEBA1" }}
+                      aria-hidden="true"
+                      onDoubleClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onStartEditNoteColor(note);
+                      }}
+                      title="Double click to edit color"
+                    />
+                  )}
                   {isEditing ? (
                     <input
                       className="note-title-input"

@@ -53,6 +53,10 @@ export function RetrieveNotesByCategory(categoryID: number): $CancellablePromise
     });
 }
 
+export function UpdateCategory(category: models$0.Category | null): $CancellablePromise<void> {
+    return $Call.ByID(1713387460, category);
+}
+
 export function UpdateNote(note: models$0.Note | null): $CancellablePromise<void> {
     return $Call.ByID(2274292440, note);
 }
