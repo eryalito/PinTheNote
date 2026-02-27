@@ -131,7 +131,7 @@
 .category-actions {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 2px;
 }
 
 .category-create,
@@ -142,6 +142,7 @@
   border-radius: 6px;
   padding: 5px 9px;
   min-width: 76px;
+  height: 28px;
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.2;
@@ -165,18 +166,28 @@
 
 .notes-list {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 6px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .note-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 2px;
   margin: 0;
+  padding-left: 0;
+}
+
+.note-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  flex: 0 0 auto;
+  margin-right: 4px;
 }
 
 .note-title {
@@ -212,8 +223,9 @@
 .note-row-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .note-display-btn {
@@ -221,13 +233,18 @@
   background: transparent;
   color: inherit;
   border-radius: 6px;
-  padding: 4px 9px;
-  min-width: 70px;
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  min-width: 34px;
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .note-display-btn:hover {
@@ -237,6 +254,21 @@
 .note-display-btn:disabled {
   opacity: 0.65;
   cursor: default;
+}
+
+.note-icon-stack {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-icon-slash {
+  position: absolute;
+  inset: 0;
+  color: rgba(255, 120, 120, 0.95);
 }
 
 .modal-overlay {

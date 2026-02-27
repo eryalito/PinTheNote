@@ -14,14 +14,15 @@ body {
   top: 6px;
   left: 6px;
   right: 6px;
-  height: 22px;
+  height: 20px;
   z-index: 100;
 }
 
 .note-nav {
   position: fixed;
-  left: 0px;
-  right: 0px;
+  left: 0;
+  right: 0;
+  top: 0;
   height: 48px;
   display: flex;
   align-items: center;
@@ -61,10 +62,40 @@ body {
 }
 
 .note-nav-button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.note-nav-center {
+.note-pin-icon-stack {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-pin-icon-slash {
+  position: absolute;
+  inset: 0;
+  color: rgba(255, 120, 120, 0.95);
+}
+
+.note-edit-icon-stack {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-edit-icon-slash {
+  position: absolute;
+  inset: 0;
+  color: rgba(255, 120, 120, 0.95);
+}
+
+.note-nav-left {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -72,13 +103,11 @@ body {
   --wails-draggable: none;
 }
 
-.note-window-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.note-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  --wails-draggable: none;
 }
 
 .note-nav-action-btn {
@@ -103,7 +132,7 @@ body {
 }
 
 .note-nav-action-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .note-nav-action-btn:disabled {
@@ -111,10 +140,69 @@ body {
   opacity: 0.7;
 }
 
+.note-footer-trigger {
+  position: fixed;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  height: 20px;
+  z-index: 100;
+}
+
+.note-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: rgba(27, 38, 54, 0.88);
+  backdrop-filter: blur(8px);
+  border-top: 2px solid rgba(255, 255, 255, 0.12);
+  transition: transform 160ms ease;
+  z-index: 101;
+  --wails-draggable: drag;
+}
+
+.note-footer.hidden {
+  transform: translateY(100%);
+}
+
+.note-footer.visible {
+  transform: translateY(0);
+}
+
+.note-footer-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  --wails-draggable: none;
+  justify-content: center;
+}
+
+.note-window-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-footer-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
 .note-content {
   height: 100%;
   box-sizing: border-box;
-  padding-top: 48px;
+  padding-top: 12px;
   padding: 12px;
   width: 100%;
   overflow-y: auto;
@@ -122,13 +210,13 @@ body {
 
 .note-content.editing {
   overflow-y: hidden;
-  padding-top: 48px;
+  padding-top: 44px;
 }
 
 .note-content.viewing {
-  padding-top: 56px;
+  padding-top: 12px;
+  padding-bottom: 60px;
   padding-inline: 14px;
-  padding-bottom: 14px;
 }
 
 .note-textarea {

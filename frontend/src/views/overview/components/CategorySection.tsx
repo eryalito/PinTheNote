@@ -1,4 +1,6 @@
 import { Category, Note } from "../../../../bindings/github.com/eryalito/pinthenote/internal/models";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faSlash, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 
 type CategorySectionProps = {
   category: Category;
@@ -106,6 +108,11 @@ export default function CategorySection({
 
               return (
                 <li key={note.ID} className="note-row">
+                  <span
+                    className="note-color"
+                    style={{ backgroundColor: note.color || "#FFEBA1" }}
+                    aria-hidden="true"
+                  />
                   {isEditing ? (
                     <input
                       className="note-title-input"
@@ -140,16 +147,30 @@ export default function CategorySection({
                       className="note-display-btn"
                       disabled={!isVisible || isPinning}
                       onClick={() => onToggleNotePin(note)}
+                      title={isPinning ? "Updating pin" : (isPinned ? "Unpin" : "Pin")}
+                      aria-label={isPinning ? "Updating pin" : (isPinned ? "Unpin" : "Pin")}
                     >
-                      {isPinning ? "Updating..." : (isPinned ? "Unpin" : "Pin")}
+                      <span className="note-icon-stack" aria-hidden="true">
+                        <FontAwesomeIcon icon={faThumbtack} />
+                        {isPinned && (
+                          <FontAwesomeIcon icon={faSlash} className="note-icon-slash" />
+                        )}
+                      </span>
                     </button>
                     <button
                       type="button"
                       className="note-display-btn"
                       disabled={isDisplaying}
                       onClick={() => onToggleNoteVisibility(note)}
+                      title={isDisplaying ? "Updating visibility" : (isVisible ? "Hide" : "Display")}
+                      aria-label={isDisplaying ? "Updating visibility" : (isVisible ? "Hide" : "Display")}
                     >
-                      {isDisplaying ? "Updating..." : (isVisible ? "Hide" : "Display")}
+                      <span className="note-icon-stack" aria-hidden="true">
+                        <FontAwesomeIcon icon={faEye} />
+                        {isVisible && (
+                          <FontAwesomeIcon icon={faSlash} className="note-icon-slash" />
+                        )}
+                      </span>
                     </button>
                   </div>
                 </li>

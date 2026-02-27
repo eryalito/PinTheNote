@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Events } from "@wailsio/runtime";
 import { marked } from "marked";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPen, faSlash, faThumbtack, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
-import { Note } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
+import { Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import "./NoteView.css";
 
 export default function NoteView() {
@@ -11,7 +13,8 @@ export default function NoteView() {
     const [note, setNote] = useState<Note | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [showNav, setShowNav] = useState(false);
+    const [showTopNav, setShowTopNav] = useState(false);
+    const [showFooter, setShowFooter] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [draftContent, setDraftContent] = useState("");
     const [saving, setSaving] = useState(false);
@@ -66,9 +69,38 @@ export default function NoteView() {
             void loadNote();
         });
 
+        const unsubscribePin = Events.On("note:pin-changed", (event: any) => {
+            const eventNoteID = Number(event?.data?.noteId);
+            const pinned = event?.data?.pinned === true;
+            if (!Number.isFinite(eventNoteID) || !id) {
+                return;
+            }
+
+            const currentNoteID = Number(id);
+            if (!Number.isFinite(currentNoteID) || currentNoteID !== eventNoteID) {
+                return;
+            }
+
+            setNote((prev) => {
+                if (!prev) {
+                    return prev;
+                }
+
+                return new Note({
+                    ...prev,
+                    window_state: new WindowState({
+                        ...(prev.window_state ?? {}),
+                        note_id: prev.ID,
+                        pinned,
+                    }),
+                });
+            });
+        });
+
         return () => {
             cancelled = true;
             unsubscribe();
+            unsubscribePin();
         };
     }, [id]);
 
@@ -82,6 +114,8 @@ export default function NoteView() {
 
     if (error) return <div>{error}</div>;
     if (!note) return <div>Note not found.</div>;
+
+    const isPinned = note.window_state?.pinned === true;
 
     const emitWindowAction = (action: "pin" | "close") => {
         void Events.Emit("note:window-action", {
@@ -121,35 +155,47 @@ export default function NoteView() {
         <main className="note-main" style={{ backgroundColor: note.color, color: note.text_color }}>
             <div
                 className="note-nav-trigger"
-                onMouseEnter={() => setShowNav(true)}
+                onMouseEnter={() => setShowTopNav(true)}
             />
 
             <nav
-                onMouseEnter={() => setShowNav(true)}
-                onMouseLeave={() => !isEditing && setShowNav(false)}
-                className={`note-nav ${isEditing || showNav ? "visible" : "hidden"}`}
+                onMouseEnter={() => setShowTopNav(true)}
+                onMouseLeave={() => !isEditing && setShowTopNav(false)}
+                className={`note-nav ${isEditing || showTopNav ? "visible" : "hidden"}`}
                 style={{ backgroundColor: "rgba(27, 38, 54, 0.88)" }}
             >
-                <button
-                    onClick={() => emitWindowAction("pin")}
-                    className="note-nav-button"
-                    title="Pin"
-                    aria-label="Pin"
-                >
-                    📌
-                </button>
-
-                <div className="note-nav-center">
+                <div className="note-nav-left">
+                    <button
+                        onClick={() => emitWindowAction("pin")}
+                        className="note-nav-button"
+                        title={isPinned ? "Unpin" : "Pin"}
+                        aria-label={isPinned ? "Unpin" : "Pin"}
+                    >
+                        <span className="note-pin-icon-stack" aria-hidden="true">
+                            <FontAwesomeIcon icon={faThumbtack} />
+                            {isPinned && (
+                                <FontAwesomeIcon icon={faSlash} className="note-pin-icon-slash" />
+                            )}
+                        </span>
+                    </button>
                     <strong className="note-window-title">{note.title}</strong>
+                </div>
+
+                <div className="note-nav-right">
                     <button
                         onClick={() => {
                             void toggleEditMode();
                         }}
-                        className="note-nav-action-btn"
+                        className="note-nav-button"
                         title={isEditing ? "Cancel" : "Edit"}
                         aria-label={isEditing ? "Cancel" : "Edit"}
                     >
-                        {isEditing ? "Cancel" : "Edit"}
+                        <span className="note-edit-icon-stack" aria-hidden="true">
+                            <FontAwesomeIcon icon={faPen} />
+                            {isEditing && (
+                                <FontAwesomeIcon icon={faSlash} className="note-edit-icon-slash" />
+                            )}
+                        </span>
                     </button>
                     {isEditing && (
                         <button
@@ -164,17 +210,33 @@ export default function NoteView() {
                             {saving ? "Saving" : "Save"}
                         </button>
                     )}
-                </div>
 
-                <button
-                    onClick={() => emitWindowAction("close")}
-                    className="note-nav-button"
-                    title="Close"
-                    aria-label="Close"
-                >
-                    ✕
-                </button>
+                    <button
+                        onClick={() => emitWindowAction("close")}
+                        className="note-nav-button"
+                        title="Close"
+                        aria-label="Close"
+                    >
+                        <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                </div>
             </nav>
+
+            <div
+                className="note-footer-trigger"
+                onMouseEnter={() => setShowFooter(true)}
+            />
+
+            <footer
+                onMouseEnter={() => setShowFooter(true)}
+                onMouseLeave={() => setShowFooter(false)}
+                className={`note-footer ${showFooter ? "visible" : "hidden"}`}
+                style={{ backgroundColor: "rgba(27, 38, 54, 0.88)" }}
+            >
+                <div className="note-footer-center">
+                    <strong className="note-footer-title">Footer banner</strong>
+                </div>
+            </footer>
 
             <div className={`note-content ${isEditing ? "editing" : "viewing"}`}>
                 {isEditing ? (
