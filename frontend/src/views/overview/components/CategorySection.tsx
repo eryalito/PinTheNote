@@ -14,7 +14,13 @@ type CategorySectionProps = {
   onCreateNote: (categoryID: number, color: string) => void;
   onToggleNoteVisibility: (note: Note) => void;
   onToggleNotePin: (note: Note) => void;
-  onRenameNote: (note: Note) => void;
+  editingNoteID: number | null;
+  editingNoteTitle: string;
+  savingRename: boolean;
+  onStartRenameNote: (note: Note) => void;
+  onEditingNoteTitleChange: (value: string) => void;
+  onCommitRenameNote: (note: Note) => void;
+  onCancelRenameNote: () => void;
 };
 
 export default function CategorySection({
@@ -31,7 +37,13 @@ export default function CategorySection({
   onCreateNote,
   onToggleNoteVisibility,
   onToggleNotePin,
-  onRenameNote,
+  editingNoteID,
+  editingNoteTitle,
+  savingRename,
+  onStartRenameNote,
+  onEditingNoteTitleChange,
+  onCommitRenameNote,
+  onCancelRenameNote,
 }: CategorySectionProps) {
   return (
     <details
@@ -90,16 +102,38 @@ export default function CategorySection({
               const isDisplaying = displayingNoteByID[note.ID] ?? false;
               const isPinned = note.window_state?.pinned ?? false;
               const isPinning = pinningNoteByID[note.ID] ?? false;
+              const isEditing = editingNoteID === note.ID;
 
               return (
                 <li key={note.ID} className="note-row">
-                  <span
-                    className="note-title"
-                    onDoubleClick={() => onRenameNote(note)}
-                    title="Double click to rename"
-                  >
-                    {note.title || "Untitled note"}
-                  </span>
+                  {isEditing ? (
+                    <input
+                      className="note-title-input"
+                      value={editingNoteTitle}
+                      onChange={(event) => onEditingNoteTitleChange(event.target.value)}
+                      onBlur={() => onCommitRenameNote(note)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          onCommitRenameNote(note);
+                        }
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          onCancelRenameNote();
+                        }
+                      }}
+                      disabled={savingRename}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="note-title"
+                      onDoubleClick={() => onStartRenameNote(note)}
+                      title="Double click to rename"
+                    >
+                      {note.title || "Untitled note"}
+                    </span>
+                  )}
                   <div className="note-row-actions">
                     <button
                       type="button"

@@ -140,7 +140,7 @@ export default function NoteView() {
                 </button>
 
                 <div className="note-nav-center">
-                    <strong className="note-title">{note.title}</strong>
+                    <strong className="note-window-title">{note.title}</strong>
                     <button
                         onClick={() => {
                             void toggleEditMode();

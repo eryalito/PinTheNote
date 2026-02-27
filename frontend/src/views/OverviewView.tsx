@@ -4,7 +4,6 @@ import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/inte
 import { Category, Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import CategorySection from "./overview/components/CategorySection";
 import CreateCategoryModal from "./overview/components/CreateCategoryModal";
-import RenameNoteModal from "./overview/components/RenameNoteModal";
 import "./OverviewView.css";
 
 type NotesByCategoryState = Record<number, Note[]>;
@@ -18,8 +17,8 @@ function OverviewView() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#FFEBA1");
   const [creatingCategory, setCreatingCategory] = useState(false);
-  const [renamingNote, setRenamingNote] = useState<Note | null>(null);
-  const [renameTitle, setRenameTitle] = useState("");
+  const [editingNoteID, setEditingNoteID] = useState<number | null>(null);
+  const [editingNoteTitle, setEditingNoteTitle] = useState("");
   const [savingRename, setSavingRename] = useState(false);
   const [deletingCategoryID, setDeletingCategoryID] = useState<number | null>(null);
   const [creatingNoteByCategory, setCreatingNoteByCategory] = useState<Record<number, boolean>>({});
@@ -240,37 +239,44 @@ function OverviewView() {
     }
   };
 
-  const onRenameNote = (note: Note) => {
-    setRenamingNote(note);
-    setRenameTitle(note.title ?? "");
+  const onStartRenameNote = (note: Note) => {
+    setEditingNoteID(note.ID);
+    setEditingNoteTitle(note.title ?? "");
   };
 
-  const onSubmitRenameNote = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!renamingNote) {
+  const onCancelRenameNote = () => {
+    if (savingRename) {
+      return;
+    }
+    setEditingNoteID(null);
+    setEditingNoteTitle("");
+  };
+
+  const onCommitRenameNote = async (note: Note) => {
+    if (savingRename || editingNoteID !== note.ID) {
       return;
     }
 
-    const currentTitle = renamingNote.title ?? "";
-    const nextTitle = renameTitle.trim();
+    const currentTitle = note.title ?? "";
+    const nextTitle = editingNoteTitle.trim();
     if (!nextTitle || nextTitle === currentTitle) {
-      setRenamingNote(null);
+      setEditingNoteID(null);
       return;
     }
 
     try {
       setError(null);
       setSavingRename(true);
-      const updatedNote = new Note({ ...renamingNote, title: nextTitle });
+      const updatedNote = new Note({ ...note, title: nextTitle });
       await NotesService.UpdateNote(updatedNote);
-      await Events.Emit("note:updated", { noteId: renamingNote.ID });
+      await Events.Emit("note:updated", { noteId: note.ID });
 
       setNotesByCategory((prev) => {
         const next: NotesByCategoryState = { ...prev };
         for (const key of Object.keys(next)) {
           const categoryID = Number(key);
           next[categoryID] = next[categoryID].map((item) => {
-            if (item.ID !== renamingNote.ID) {
+            if (item.ID !== note.ID) {
               return item;
             }
             return new Note({ ...item, title: nextTitle });
@@ -279,7 +285,8 @@ function OverviewView() {
         return next;
       });
 
-      setRenamingNote(null);
+      setEditingNoteID(null);
+      setEditingNoteTitle("");
     } catch {
       setError("Failed to update note title.");
     } finally {
@@ -293,7 +300,7 @@ function OverviewView() {
         <h1 className="overview-title">Categories</h1>
         <button
           type="button"
-          className="overview-button"
+          className="overview-button overview-create-category-btn"
           onClick={() => setShowCreateModal(true)}
         >
           New Category
@@ -341,9 +348,17 @@ function OverviewView() {
                 onToggleNotePin={(noteToPin) => {
                   void onToggleNotePin(noteToPin);
                 }}
-                onRenameNote={(noteToRename) => {
-                  void onRenameNote(noteToRename);
+                editingNoteID={editingNoteID}
+                editingNoteTitle={editingNoteTitle}
+                savingRename={savingRename}
+                onStartRenameNote={(noteToRename) => {
+                  onStartRenameNote(noteToRename);
                 }}
+                onEditingNoteTitleChange={setEditingNoteTitle}
+                onCommitRenameNote={(noteToRename) => {
+                  void onCommitRenameNote(noteToRename);
+                }}
+                onCancelRenameNote={onCancelRenameNote}
               />
             );
           })
@@ -359,19 +374,6 @@ function OverviewView() {
         onColorChange={setNewCategoryColor}
         onClose={() => setShowCreateModal(false)}
         onSubmit={onSubmitCreateCategory}
-      />
-
-      <RenameNoteModal
-        isOpen={renamingNote !== null}
-        title={renameTitle}
-        saving={savingRename}
-        onTitleChange={setRenameTitle}
-        onClose={() => {
-          if (!savingRename) {
-            setRenamingNote(null);
-          }
-        }}
-        onSubmit={onSubmitRenameNote}
       />
     </main>
   );
