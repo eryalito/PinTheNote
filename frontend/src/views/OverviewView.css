@@ -133,6 +133,12 @@
   color: #f5f7fb;
 }
 
+.note-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .note-display-btn {
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: transparent;

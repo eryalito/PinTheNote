@@ -8,10 +8,13 @@ type CategorySectionProps = {
   isDeleting: boolean;
   isCreatingNote: boolean;
   displayingNoteByID: Record<number, boolean>;
+  pinningNoteByID: Record<number, boolean>;
   onToggle: (categoryID: number, isOpen: boolean) => void;
   onDelete: (categoryID: number) => void;
   onCreateNote: (categoryID: number, color: string) => void;
   onToggleNoteVisibility: (note: Note) => void;
+  onToggleNotePin: (note: Note) => void;
+  onRenameNote: (note: Note) => void;
 };
 
 export default function CategorySection({
@@ -22,10 +25,13 @@ export default function CategorySection({
   isDeleting,
   isCreatingNote,
   displayingNoteByID,
+  pinningNoteByID,
   onToggle,
   onDelete,
   onCreateNote,
   onToggleNoteVisibility,
+  onToggleNotePin,
+  onRenameNote,
 }: CategorySectionProps) {
   return (
     <details
@@ -82,18 +88,36 @@ export default function CategorySection({
             {notes.map((note) => {
               const isVisible = note.window_state?.visible ?? false;
               const isDisplaying = displayingNoteByID[note.ID] ?? false;
+              const isPinned = note.window_state?.pinned ?? false;
+              const isPinning = pinningNoteByID[note.ID] ?? false;
 
               return (
                 <li key={note.ID} className="note-row">
-                  <span className="note-title">{note.title || "Untitled note"}</span>
-                  <button
-                    type="button"
-                    className="note-display-btn"
-                    disabled={isDisplaying}
-                    onClick={() => onToggleNoteVisibility(note)}
+                  <span
+                    className="note-title"
+                    onDoubleClick={() => onRenameNote(note)}
+                    title="Double click to rename"
                   >
-                    {isDisplaying ? "Updating..." : (isVisible ? "Hide" : "Display")}
-                  </button>
+                    {note.title || "Untitled note"}
+                  </span>
+                  <div className="note-row-actions">
+                    <button
+                      type="button"
+                      className="note-display-btn"
+                      disabled={!isVisible || isPinning}
+                      onClick={() => onToggleNotePin(note)}
+                    >
+                      {isPinning ? "Updating..." : (isPinned ? "Unpin" : "Pin")}
+                    </button>
+                    <button
+                      type="button"
+                      className="note-display-btn"
+                      disabled={isDisplaying}
+                      onClick={() => onToggleNoteVisibility(note)}
+                    >
+                      {isDisplaying ? "Updating..." : (isVisible ? "Hide" : "Display")}
+                    </button>
+                  </div>
                 </li>
               );
             })}

@@ -4,6 +4,7 @@ import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/inte
 import { Category, Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import CategorySection from "./overview/components/CategorySection";
 import CreateCategoryModal from "./overview/components/CreateCategoryModal";
+import RenameNoteModal from "./overview/components/RenameNoteModal";
 import "./OverviewView.css";
 
 type NotesByCategoryState = Record<number, Note[]>;
@@ -17,9 +18,13 @@ function OverviewView() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#FFEBA1");
   const [creatingCategory, setCreatingCategory] = useState(false);
+  const [renamingNote, setRenamingNote] = useState<Note | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
+  const [savingRename, setSavingRename] = useState(false);
   const [deletingCategoryID, setDeletingCategoryID] = useState<number | null>(null);
   const [creatingNoteByCategory, setCreatingNoteByCategory] = useState<Record<number, boolean>>({});
   const [displayingNoteByID, setDisplayingNoteByID] = useState<Record<number, boolean>>({});
+  const [pinningNoteByID, setPinningNoteByID] = useState<Record<number, boolean>>({});
   const [openCategories, setOpenCategories] = useState<Record<number, boolean>>({});
   const [notesByCategory, setNotesByCategory] = useState<NotesByCategoryState>({});
   const [loadingNotesByCategory, setLoadingNotesByCategory] = useState<LoadingByCategoryState>({});
@@ -67,6 +72,46 @@ function OverviewView() {
                 ...(item.window_state ?? {}),
                 note_id: item.ID,
                 visible,
+              }),
+            });
+          });
+        }
+
+        return next;
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = Events.On("note:pin-changed", (event: any) => {
+      const payload = event?.data;
+      const noteID = Number(payload?.noteId);
+      const pinned = payload?.pinned === true;
+
+      if (!Number.isFinite(noteID)) {
+        return;
+      }
+
+      setNotesByCategory((prev) => {
+        const next: NotesByCategoryState = { ...prev };
+
+        for (const key of Object.keys(next)) {
+          const categoryID = Number(key);
+          next[categoryID] = next[categoryID].map((item) => {
+            if (item.ID !== noteID) {
+              return item;
+            }
+
+            return new Note({
+              ...item,
+              window_state: new WindowState({
+                ...(item.window_state ?? {}),
+                note_id: item.ID,
+                pinned,
               }),
             });
           });
@@ -180,6 +225,68 @@ function OverviewView() {
     }
   };
 
+  const onToggleNotePin = async (note: Note) => {
+    try {
+      setError(null);
+      setPinningNoteByID((prev) => ({ ...prev, [note.ID]: true }));
+      await Events.Emit("note:window-action", {
+        action: "pin",
+        noteId: note.ID,
+      });
+    } catch {
+      setError("Failed to update note pin state.");
+    } finally {
+      setPinningNoteByID((prev) => ({ ...prev, [note.ID]: false }));
+    }
+  };
+
+  const onRenameNote = (note: Note) => {
+    setRenamingNote(note);
+    setRenameTitle(note.title ?? "");
+  };
+
+  const onSubmitRenameNote = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!renamingNote) {
+      return;
+    }
+
+    const currentTitle = renamingNote.title ?? "";
+    const nextTitle = renameTitle.trim();
+    if (!nextTitle || nextTitle === currentTitle) {
+      setRenamingNote(null);
+      return;
+    }
+
+    try {
+      setError(null);
+      setSavingRename(true);
+      const updatedNote = new Note({ ...renamingNote, title: nextTitle });
+      await NotesService.UpdateNote(updatedNote);
+      await Events.Emit("note:updated", { noteId: renamingNote.ID });
+
+      setNotesByCategory((prev) => {
+        const next: NotesByCategoryState = { ...prev };
+        for (const key of Object.keys(next)) {
+          const categoryID = Number(key);
+          next[categoryID] = next[categoryID].map((item) => {
+            if (item.ID !== renamingNote.ID) {
+              return item;
+            }
+            return new Note({ ...item, title: nextTitle });
+          });
+        }
+        return next;
+      });
+
+      setRenamingNote(null);
+    } catch {
+      setError("Failed to update note title.");
+    } finally {
+      setSavingRename(false);
+    }
+  };
+
   return (
     <main className="overview-main">
       <header className="overview-header">
@@ -218,6 +325,7 @@ function OverviewView() {
                 isDeleting={isDeleting}
                 isCreatingNote={isCreatingNote}
                 displayingNoteByID={displayingNoteByID}
+                pinningNoteByID={pinningNoteByID}
                 onToggle={(categoryID, isNowOpen) => {
                   void onToggleCategory(categoryID, isNowOpen);
                 }}
@@ -229,6 +337,12 @@ function OverviewView() {
                 }}
                 onToggleNoteVisibility={(noteToDisplay) => {
                   void onToggleNoteVisibility(noteToDisplay);
+                }}
+                onToggleNotePin={(noteToPin) => {
+                  void onToggleNotePin(noteToPin);
+                }}
+                onRenameNote={(noteToRename) => {
+                  void onRenameNote(noteToRename);
                 }}
               />
             );
@@ -245,6 +359,19 @@ function OverviewView() {
         onColorChange={setNewCategoryColor}
         onClose={() => setShowCreateModal(false)}
         onSubmit={onSubmitCreateCategory}
+      />
+
+      <RenameNoteModal
+        isOpen={renamingNote !== null}
+        title={renameTitle}
+        saving={savingRename}
+        onTitleChange={setRenameTitle}
+        onClose={() => {
+          if (!savingRename) {
+            setRenamingNote(null);
+          }
+        }}
+        onSubmit={onSubmitRenameNote}
       />
     </main>
   );

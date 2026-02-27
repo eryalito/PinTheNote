@@ -52,8 +52,23 @@ export default function NoteView() {
 
         loadNote();
 
+        const unsubscribe = Events.On("note:updated", (event: any) => {
+            const eventNoteID = Number(event?.data?.noteId);
+            if (!Number.isFinite(eventNoteID) || !id) {
+                return;
+            }
+
+            const currentNoteID = Number(id);
+            if (!Number.isFinite(currentNoteID) || currentNoteID !== eventNoteID) {
+                return;
+            }
+
+            void loadNote();
+        });
+
         return () => {
             cancelled = true;
+            unsubscribe();
         };
     }, [id]);
 

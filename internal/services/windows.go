@@ -207,6 +207,7 @@ func (s *WindowService) HandleWindowAction(action string, noteID uint) error {
 		if err := s.noteRepository.UpdateWindowState(noteID, ws); err != nil {
 			return err
 		}
+		s.emitPinChanged(noteID, ws.Pinned)
 		return nil
 	default:
 		return fmt.Errorf("unsupported action %q", action)
@@ -243,6 +244,13 @@ func (s *WindowService) emitVisibilityChanged(noteID uint, visible bool) {
 	s.app.Event.Emit("note:visibility-changed", map[string]any{
 		"noteId":  noteID,
 		"visible": visible,
+	})
+}
+
+func (s *WindowService) emitPinChanged(noteID uint, pinned bool) {
+	s.app.Event.Emit("note:pin-changed", map[string]any{
+		"noteId": noteID,
+		"pinned": pinned,
 	})
 }
 
