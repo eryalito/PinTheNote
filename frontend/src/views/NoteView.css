@@ -237,6 +237,28 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: text;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 120ms ease, opacity 120ms ease;
+}
+
+.note-window-title:hover,
+.note-window-title:focus-visible {
+  border-bottom-color: rgba(245, 247, 251, 0.55);
+  opacity: 0.96;
+}
+
+.note-window-title-input {
+  width: 180px;
+  max-width: 180px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 247, 251, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
 }
 
 .note-footer-title {

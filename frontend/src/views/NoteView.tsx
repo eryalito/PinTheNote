@@ -19,6 +19,9 @@ export default function NoteView() {
     const [isEditing, setIsEditing] = useState(false);
     const [draftContent, setDraftContent] = useState("");
     const [saving, setSaving] = useState(false);
+    const [editingTitle, setEditingTitle] = useState(false);
+    const [draftTitle, setDraftTitle] = useState("");
+    const [savingTitle, setSavingTitle] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingNote, setDeletingNote] = useState(false);
     const [editingColor, setEditingColor] = useState(false);
@@ -164,6 +167,52 @@ export default function NoteView() {
         setIsEditing(false);
     };
 
+    const startEditTitle = () => {
+        setDraftTitle(note.title ?? "");
+        setEditingTitle(true);
+    };
+
+    const cancelEditTitle = () => {
+        if (savingTitle) {
+            return;
+        }
+
+        setEditingTitle(false);
+        setDraftTitle("");
+    };
+
+    const commitEditTitle = async () => {
+        if (savingTitle) {
+            return;
+        }
+
+        const currentTitle = note.title ?? "";
+        const nextTitle = draftTitle.trim();
+
+        if (!nextTitle || nextTitle === currentTitle) {
+            setEditingTitle(false);
+            setDraftTitle("");
+            return;
+        }
+
+        try {
+            setSavingTitle(true);
+            setError(null);
+
+            const updatedNote = new Note({ ...note, title: nextTitle });
+            await NotesService.UpdateNote(updatedNote);
+            await Events.Emit("note:updated", { noteId: note.ID });
+
+            setNote(updatedNote);
+            setEditingTitle(false);
+            setDraftTitle("");
+        } catch {
+            setError("Failed to update note title.");
+        } finally {
+            setSavingTitle(false);
+        }
+    };
+
     const startEditColor = () => {
         setDraftColor(note.color || "#FFEBA1");
         setEditingColor(true);
@@ -230,8 +279,8 @@ export default function NoteView() {
 
             <nav
                 onMouseEnter={() => setShowTopNav(true)}
-                onMouseLeave={() => !isEditing && setShowTopNav(false)}
-                className={`note-nav ${isEditing || showTopNav ? "visible" : "hidden"}`}
+                onMouseLeave={() => !isEditing && !editingTitle && setShowTopNav(false)}
+                className={`note-nav ${isEditing || editingTitle || showTopNav ? "visible" : "hidden"}`}
                 style={{ backgroundColor: "rgba(27, 38, 54, 0.88)" }}
             >
                 <div className="note-nav-left">
@@ -248,7 +297,40 @@ export default function NoteView() {
                             )}
                         </span>
                     </button>
-                    <strong className="note-window-title">{note.title}</strong>
+                    {editingTitle ? (
+                        <input
+                            className="note-window-title-input"
+                            value={draftTitle}
+                            onChange={(event) => setDraftTitle(event.target.value)}
+                            onBlur={() => {
+                                void commitEditTitle();
+                            }}
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    void commitEditTitle();
+                                }
+                                if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    cancelEditTitle();
+                                }
+                            }}
+                            disabled={savingTitle}
+                            autoFocus
+                        />
+                    ) : (
+                        <strong
+                            className="note-window-title"
+                            onDoubleClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                startEditTitle();
+                            }}
+                            title="Double click to rename"
+                        >
+                            {note.title || "Untitled note"}
+                        </strong>
+                    )}
                 </div>
 
                 <div className="note-nav-right">
