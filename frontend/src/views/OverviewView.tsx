@@ -2,10 +2,11 @@ import { FormEvent, useEffect, useState } from "react";
 import { Events } from "@wailsio/runtime";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
 import { Category, Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
+import ConfirmModal from "../components/ConfirmModal";
 import CategorySection from "./overview/components/CategorySection";
 import CreateCategoryModal from "./overview/components/CreateCategoryModal";
 import "./OverviewView.css";
-
+ 
 type NotesByCategoryState = Record<number, Note[]>;
 type LoadingByCategoryState = Record<number, boolean>;
 
@@ -650,74 +651,41 @@ function OverviewView() {
         )}
       </section>
 
-      {notePendingDelete && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-note-title">
-          <div className="modal note-delete-modal">
-            <h2 id="delete-note-title" className="modal-title">Delete note?</h2>
-            <p className="note-delete-modal-text">
-              This will permanently delete
-              {" "}
-              <strong>{notePendingDelete.title || "Untitled note"}</strong>
-              .
-            </p>
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="overview-button secondary"
-                disabled={deletingNoteID === notePendingDelete.ID}
-                onClick={onCancelDeleteNote}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="overview-button note-delete-confirm-btn"
-                disabled={deletingNoteID === notePendingDelete.ID}
-                onClick={() => {
-                  void onConfirmDeleteNote();
-                }}
-              >
-                {deletingNoteID === notePendingDelete.ID ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={notePendingDelete !== null}
+        title="Delete note?"
+        message={
+          <>
+            This will permanently delete <strong>{notePendingDelete?.title || "Untitled note"}</strong>.
+          </>
+        }
+        confirmLabel={
+          notePendingDelete && deletingNoteID === notePendingDelete.ID ? "Deleting..." : "Delete"
+        }
+        confirmDisabled={notePendingDelete !== null && deletingNoteID === notePendingDelete.ID}
+        onCancel={onCancelDeleteNote}
+        onConfirm={() => {
+          void onConfirmDeleteNote();
+        }}
+      />
 
-      {categoryPendingDelete && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-category-title">
-          <div className="modal category-delete-modal">
-            <h2 id="delete-category-title" className="modal-title">Delete category?</h2>
-            <p className="category-delete-modal-text">
-              This will permanently delete
-              {" "}
-              <strong>{categoryPendingDelete.name}</strong>
-              {" "}
-              and all notes in this category.
-            </p>
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="overview-button secondary"
-                disabled={deletingCategoryID === categoryPendingDelete.ID}
-                onClick={onCancelDeleteCategory}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="overview-button note-delete-confirm-btn"
-                disabled={deletingCategoryID === categoryPendingDelete.ID}
-                onClick={() => {
-                  void onConfirmDeleteCategory();
-                }}
-              >
-                {deletingCategoryID === categoryPendingDelete.ID ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={categoryPendingDelete !== null}
+        title="Delete category?"
+        message={
+          <>
+            This will permanently delete <strong>{categoryPendingDelete?.name}</strong> and all notes in this category.
+          </>
+        }
+        confirmLabel={
+          categoryPendingDelete && deletingCategoryID === categoryPendingDelete.ID ? "Deleting..." : "Delete"
+        }
+        confirmDisabled={categoryPendingDelete !== null && deletingCategoryID === categoryPendingDelete.ID}
+        onCancel={onCancelDeleteCategory}
+        onConfirm={() => {
+          void onConfirmDeleteCategory();
+        }}
+      />
 
       <CreateCategoryModal
         isOpen={showCreateModal}

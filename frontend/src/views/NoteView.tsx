@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Events } from "@wailsio/runtime";
 import { marked } from "marked";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faSlash, faThumbtack, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faPen, faSlash, faThumbtack, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
 import { Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
+import ConfirmModal from "../components/ConfirmModal";
 import "./NoteView.css";
 
 export default function NoteView() {
@@ -18,6 +19,18 @@ export default function NoteView() {
     const [isEditing, setIsEditing] = useState(false);
     const [draftContent, setDraftContent] = useState("");
     const [saving, setSaving] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingNote, setDeletingNote] = useState(false);
+    const [editingColor, setEditingColor] = useState(false);
+    const [draftColor, setDraftColor] = useState("#FFEBA1");
+    const [savingColor, setSavingColor] = useState(false);
+    const colorInputRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+        if (editingColor) {
+            colorInputRef.current?.click();
+        }
+    }, [editingColor]);
 
     useEffect(() => {
         let cancelled = false;
@@ -151,6 +164,63 @@ export default function NoteView() {
         setIsEditing(false);
     };
 
+    const startEditColor = () => {
+        setDraftColor(note.color || "#FFEBA1");
+        setEditingColor(true);
+    };
+
+    const cancelEditColor = () => {
+        if (savingColor) {
+            return;
+        }
+
+        setEditingColor(false);
+        setDraftColor("#FFEBA1");
+    };
+
+    const commitEditColor = async (nextColor: string) => {
+        if (savingColor) {
+            return;
+        }
+
+        const currentColor = note.color || "#FFEBA1";
+        if (!nextColor || nextColor === currentColor) {
+            setEditingColor(false);
+            setDraftColor("#FFEBA1");
+            return;
+        }
+
+        try {
+            setSavingColor(true);
+            setError(null);
+
+            const updatedNote = new Note({ ...note, color: nextColor });
+            await NotesService.UpdateNote(updatedNote);
+            await Events.Emit("note:updated", { noteId: note.ID });
+
+            setNote(updatedNote);
+            setEditingColor(false);
+            setDraftColor("#FFEBA1");
+        } catch {
+            setError("Failed to update note color.");
+        } finally {
+            setSavingColor(false);
+        }
+    };
+
+    const confirmDeleteNote = async () => {
+        try {
+            setDeletingNote(true);
+            setError(null);
+            await NotesService.DeleteNote(note.ID);
+            setShowDeleteModal(false);
+        } catch {
+            setError("Failed to delete note.");
+        } finally {
+            setDeletingNote(false);
+        }
+    };
+
     return (
         <main className="note-main" style={{ backgroundColor: note.color, color: note.text_color }}>
             <div
@@ -233,10 +303,77 @@ export default function NoteView() {
                 className={`note-footer ${showFooter ? "visible" : "hidden"}`}
                 style={{ backgroundColor: "rgba(27, 38, 54, 0.88)" }}
             >
-                <div className="note-footer-center">
-                    <strong className="note-footer-title">Footer banner</strong>
+                <div className="note-footer-left">
+                    {editingColor ? (
+                        <input
+                            ref={colorInputRef}
+                            type="color"
+                            className="note-footer-color-input"
+                            value={draftColor}
+                            onChange={(event) => {
+                                setDraftColor(event.target.value);
+                            }}
+                            onBlur={() => {
+                                void commitEditColor(draftColor);
+                            }}
+                            onKeyDown={(event) => {
+                                if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    cancelEditColor();
+                                }
+                            }}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                            }}
+                            onMouseDown={(event) => {
+                                event.stopPropagation();
+                            }}
+                            disabled={savingColor}
+                            autoFocus
+                        />
+                    ) : (
+                        <span
+                            className="note-footer-color"
+                            style={{ backgroundColor: note.color || "#FFEBA1" }}
+                            onDoubleClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                startEditColor();
+                            }}
+                            title="Double click to edit color"
+                        />
+                    )}
+                </div>
+
+                <div className="note-footer-right">
+                    <button
+                        type="button"
+                        className="note-footer-delete-btn"
+                        onClick={() => setShowDeleteModal(true)}
+                        disabled={deletingNote}
+                        title={deletingNote ? "Deleting" : "Delete note"}
+                        aria-label={deletingNote ? "Deleting" : "Delete note"}
+                    >
+                        <FontAwesomeIcon icon={faTrashCan} />
+                    </button>
                 </div>
             </footer>
+
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                title="Delete note?"
+                message={
+                    <>
+                        This will permanently delete <strong>{note.title || "Untitled note"}</strong>.
+                    </>
+                }
+                confirmLabel={deletingNote ? "Deleting..." : "Delete"}
+                confirmDisabled={deletingNote}
+                onCancel={() => setShowDeleteModal(false)}
+                onConfirm={() => {
+                    void confirmDeleteNote();
+                }}
+            />
 
             <div className={`note-content ${isEditing ? "editing" : "viewing"}`}>
                 {isEditing ? (

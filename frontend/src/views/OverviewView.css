@@ -321,35 +321,6 @@
   cursor: default;
 }
 
-.note-delete-modal {
-  max-width: 420px;
-}
-
-.category-delete-modal {
-  max-width: 420px;
-}
-
-.note-delete-modal-text {
-  margin: 0;
-  line-height: 1.45;
-  color: rgba(245, 247, 251, 0.9);
-}
-
-.category-delete-modal-text {
-  margin: 0;
-  line-height: 1.45;
-  color: rgba(245, 247, 251, 0.9);
-}
-
-.note-delete-confirm-btn {
-  border-color: rgba(255, 120, 120, 0.6);
-  background: rgba(255, 120, 120, 0.2);
-}
-
-.note-delete-confirm-btn:hover {
-  background: rgba(255, 120, 120, 0.3);
-}
-
 .note-display-btn:disabled {
   opacity: 0.65;
   cursor: default;

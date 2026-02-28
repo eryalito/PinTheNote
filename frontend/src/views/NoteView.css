@@ -157,7 +157,7 @@ body {
   height: 42px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0 12px;
   background: rgba(27, 38, 54, 0.88);
   backdrop-filter: blur(8px);
@@ -175,13 +175,59 @@ body {
   transform: translateY(0);
 }
 
-.note-footer-center {
+.note-footer-left,
+.note-footer-right {
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
   --wails-draggable: none;
+}
+
+.note-footer-right {
+  margin-left: auto;
+}
+
+.note-footer-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+}
+
+.note-footer-color-input {
+  width: 16px;
+  height: 16px;
+  border: none;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.note-footer-delete-btn {
+  border: 1px solid rgba(255, 120, 120, 0.55);
+  background: rgba(255, 120, 120, 0.12);
+  color: inherit;
+  border-radius: 6px;
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  min-width: 34px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+}
+
+.note-footer-delete-btn:hover {
+  background: rgba(255, 120, 120, 0.24);
+}
+
+.note-footer-delete-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
 
 .note-window-title {
@@ -338,3 +384,4 @@ body {
   display: grid;
   place-items: center;
 }
+
