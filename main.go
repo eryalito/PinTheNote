@@ -55,12 +55,6 @@ func main() {
 	app := application.New(application.Options{
 		Name:        "pinthenote",
 		Description: "A demo of using raw HTML & CSS",
-		Services: []application.Service{
-			application.NewService(&services.NotesService{
-				NotesRepository:    noteReposiroty,
-				CategoryRepository: categoryRepository,
-			}),
-		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},
@@ -70,7 +64,13 @@ func main() {
 	})
 	windowService := services.NewWindowService(app, noteReposiroty)
 	windowService.RegisterEventHandlers()
+	notesService := &services.NotesService{
+		NotesRepository:    noteReposiroty,
+		CategoryRepository: categoryRepository,
+		WindowService:      windowService,
+	}
 	app.RegisterService(application.NewService(windowService))
+	app.RegisterService(application.NewService(notesService))
 
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.
