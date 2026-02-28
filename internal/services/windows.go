@@ -77,7 +77,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 		Frameless:          true,
 		MinWidth:           325,
 		MinHeight:          200,
-		ZoomControlEnabled: true,
+		ZoomControlEnabled: false,
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,

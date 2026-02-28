@@ -206,6 +206,31 @@ body {
   cursor: pointer;
 }
 
+.note-footer-zoom-btn {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  min-width: 30px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-footer-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.note-footer-zoom-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
 .note-footer-delete-btn {
   border: 1px solid rgba(255, 120, 120, 0.55);
   background: rgba(255, 120, 120, 0.12);

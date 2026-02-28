@@ -3,7 +3,7 @@ module github.com/eryalito/pinthenote
 go 1.25
 
 require (
-	github.com/wailsapp/wails/v3 v3.0.0-alpha.71
+	github.com/wailsapp/wails/v3 v3.0.0-alpha.73
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
 )

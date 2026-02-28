@@ -3,11 +3,18 @@ import { useParams } from "react-router-dom";
 import { Events } from "@wailsio/runtime";
 import { marked } from "marked";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faSlash, faThumbtack, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faPen, faSlash, faThumbtack, faTrashCan, faXmark, faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
 import { Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import ConfirmModal from "../components/ConfirmModal";
 import "./NoteView.css";
+
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.1;
+
+const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+const roundZoom = (value: number) => Number(value.toFixed(1));
 
 export default function NoteView() {
     const { id } = useParams<{ id: string }>();
@@ -27,6 +34,7 @@ export default function NoteView() {
     const [editingColor, setEditingColor] = useState(false);
     const [draftColor, setDraftColor] = useState("#FFEBA1");
     const [savingColor, setSavingColor] = useState(false);
+    const [savingZoom, setSavingZoom] = useState(false);
     const colorInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
@@ -132,6 +140,7 @@ export default function NoteView() {
     if (!note) return <div>Note not found.</div>;
 
     const isPinned = note.window_state?.pinned === true;
+    const currentZoom = note.zoom_multiplier && note.zoom_multiplier > 0 ? note.zoom_multiplier : 1;
 
     const emitWindowAction = (action: "pin" | "close") => {
         void Events.Emit("note:window-action", {
@@ -267,6 +276,43 @@ export default function NoteView() {
             setError("Failed to delete note.");
         } finally {
             setDeletingNote(false);
+        }
+    };
+
+    const resetZoom = async () => {
+        if (savingZoom || currentZoom === 1) {
+            return;
+        }
+        const previousZoom = currentZoom;
+        const nextZoom = 1;
+        return updateZoom(nextZoom - previousZoom);
+    }
+
+    const updateZoom = async (delta: number) => {
+        if (savingZoom) {
+            return;
+        }
+
+        const previousZoom = currentZoom;
+        const nextZoom = roundZoom(clampZoom(previousZoom + delta));
+
+        if (nextZoom === previousZoom) {
+            return;
+        }
+
+        const optimisticNote = new Note({ ...note, zoom_multiplier: nextZoom });
+        setNote(optimisticNote);
+
+        try {
+            setSavingZoom(true);
+            setError(null);
+            await NotesService.UpdateNote(optimisticNote);
+            await Events.Emit("note:updated", { noteId: note.ID });
+        } catch {
+            setNote(new Note({ ...note, zoom_multiplier: previousZoom }));
+            setError("Failed to update zoom.");
+        } finally {
+            setSavingZoom(false);
         }
     };
 
@@ -425,6 +471,45 @@ export default function NoteView() {
                             title="Double click to edit color"
                         />
                     )}
+
+                    <button
+                        type="button"
+                        className="note-footer-zoom-btn"
+                        onClick={() => {
+                            void updateZoom(-ZOOM_STEP);
+                        }}
+                        disabled={savingZoom || currentZoom <= MIN_ZOOM}
+                        title="Zoom out"
+                        aria-label="Zoom out"
+                    >
+                        <FontAwesomeIcon icon={faMagnifyingGlassMinus} />
+                    </button>
+
+                    <button
+                        type="button"
+                        className="note-footer-zoom-btn"
+                        onClick={() => {
+                            void resetZoom();
+                        }}
+                        disabled={savingZoom || currentZoom == 1}
+                        title="Reset zoom"
+                        aria-label="Reset zoom"
+                    >
+                        <FontAwesomeIcon icon={faArrowRotateLeft} />
+                    </button>
+                    
+                    <button
+                        type="button"
+                        className="note-footer-zoom-btn"
+                        onClick={() => {
+                            void updateZoom(ZOOM_STEP);
+                        }}
+                        disabled={savingZoom || currentZoom >= MAX_ZOOM}
+                        title="Zoom in"
+                        aria-label="Zoom in"
+                    >
+                        <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
+                    </button>
                 </div>
 
                 <div className="note-footer-right">
@@ -457,7 +542,8 @@ export default function NoteView() {
                 }}
             />
 
-            <div className={`note-content ${isEditing ? "editing" : "viewing"}`}>
+            <div className={`note-content ${isEditing ? "editing" : "viewing"}`}
+                        style={{ transformOrigin: "0% 0%", transform: `scale(${currentZoom})` }}>
                 {isEditing ? (
                     <textarea
                         value={draftContent}

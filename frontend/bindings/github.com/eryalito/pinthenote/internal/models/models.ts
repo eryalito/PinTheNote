@@ -61,6 +61,7 @@ export class Note {
     "title": string;
     "content": string;
     "color": string;
+    "zoom_multiplier": number;
     "text_color": string;
     "category_id": number | null;
     "category": Category | null;
@@ -89,6 +90,9 @@ export class Note {
         if (!("color" in $$source)) {
             this["color"] = "";
         }
+        if (!("zoom_multiplier" in $$source)) {
+            this["zoom_multiplier"] = 0;
+        }
         if (!("text_color" in $$source)) {
             this["text_color"] = "";
         }
@@ -109,14 +113,14 @@ export class Note {
      * Creates a new Note instance from a string or object.
      */
     static createFrom($$source: any = {}): Note {
-        const $$createField9_0 = $$createType1;
-        const $$createField10_0 = $$createType3;
+        const $$createField10_0 = $$createType1;
+        const $$createField11_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("category" in $$parsedSource) {
-            $$parsedSource["category"] = $$createField9_0($$parsedSource["category"]);
+            $$parsedSource["category"] = $$createField10_0($$parsedSource["category"]);
         }
         if ("window_state" in $$parsedSource) {
-            $$parsedSource["window_state"] = $$createField10_0($$parsedSource["window_state"]);
+            $$parsedSource["window_state"] = $$createField11_0($$parsedSource["window_state"]);
         }
         return new Note($$parsedSource as Partial<Note>);
     }
