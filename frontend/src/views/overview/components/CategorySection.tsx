@@ -13,7 +13,7 @@ type CategorySectionProps = {
   displayingNoteByID: Record<number, boolean>;
   pinningNoteByID: Record<number, boolean>;
   onToggle: (categoryID: number, isOpen: boolean) => void;
-  onDelete: (categoryID: number) => void;
+  onDelete: (category: Category) => void;
   onCreateNote: (categoryID: number, color: string) => void;
   onToggleNoteVisibility: (note: Note) => void;
   onToggleNotePin: (note: Note) => void;
@@ -218,7 +218,7 @@ export default function CategorySection({
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              onDelete(category.ID);
+              onDelete(category);
             }}
           >
             {isDeleting ? "Deleting..." : "Delete"}

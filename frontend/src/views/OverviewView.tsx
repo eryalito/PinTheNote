@@ -30,6 +30,7 @@ function OverviewView() {
   const [editingCategoryColor, setEditingCategoryColor] = useState("#FFEBA1");
   const [savingCategoryColor, setSavingCategoryColor] = useState(false);
   const [deletingCategoryID, setDeletingCategoryID] = useState<number | null>(null);
+  const [categoryPendingDelete, setCategoryPendingDelete] = useState<Category | null>(null);
   const [creatingNoteByCategory, setCreatingNoteByCategory] = useState<Record<number, boolean>>({});
   const [displayingNoteByID, setDisplayingNoteByID] = useState<Record<number, boolean>>({});
   const [pinningNoteByID, setPinningNoteByID] = useState<Record<number, boolean>>({});
@@ -197,6 +198,28 @@ function OverviewView() {
     } finally {
       setDeletingCategoryID(null);
     }
+  };
+
+  const onRequestDeleteCategory = (category: Category) => {
+    setCategoryPendingDelete(category);
+  };
+
+  const onCancelDeleteCategory = () => {
+    if (deletingCategoryID !== null) {
+      return;
+    }
+
+    setCategoryPendingDelete(null);
+  };
+
+  const onConfirmDeleteCategory = async () => {
+    if (!categoryPendingDelete) {
+      return;
+    }
+
+    const categoryID = categoryPendingDelete.ID;
+    await onDeleteCategory(categoryID);
+    setCategoryPendingDelete(null);
   };
 
   const onStartRenameCategory = (category: Category) => {
@@ -563,8 +586,8 @@ function OverviewView() {
                 onToggle={(categoryID, isNowOpen) => {
                   void onToggleCategory(categoryID, isNowOpen);
                 }}
-                onDelete={(categoryID) => {
-                  void onDeleteCategory(categoryID);
+                onDelete={(categoryToDelete) => {
+                  onRequestDeleteCategory(categoryToDelete);
                 }}
                 onCreateNote={(categoryID, color) => {
                   void onCreateNoteInCategory(categoryID, color);
@@ -655,6 +678,41 @@ function OverviewView() {
                 }}
               >
                 {deletingNoteID === notePendingDelete.ID ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {categoryPendingDelete && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-category-title">
+          <div className="modal category-delete-modal">
+            <h2 id="delete-category-title" className="modal-title">Delete category?</h2>
+            <p className="category-delete-modal-text">
+              This will permanently delete
+              {" "}
+              <strong>{categoryPendingDelete.name}</strong>
+              {" "}
+              and all notes in this category.
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="overview-button secondary"
+                disabled={deletingCategoryID === categoryPendingDelete.ID}
+                onClick={onCancelDeleteCategory}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="overview-button note-delete-confirm-btn"
+                disabled={deletingCategoryID === categoryPendingDelete.ID}
+                onClick={() => {
+                  void onConfirmDeleteCategory();
+                }}
+              >
+                {deletingCategoryID === categoryPendingDelete.ID ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

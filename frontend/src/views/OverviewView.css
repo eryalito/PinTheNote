@@ -325,7 +325,17 @@
   max-width: 420px;
 }
 
+.category-delete-modal {
+  max-width: 420px;
+}
+
 .note-delete-modal-text {
+  margin: 0;
+  line-height: 1.45;
+  color: rgba(245, 247, 251, 0.9);
+}
+
+.category-delete-modal-text {
   margin: 0;
   line-height: 1.45;
   color: rgba(245, 247, 251, 0.9);
