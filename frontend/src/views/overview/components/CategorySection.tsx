@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Category, Note } from "../../../../bindings/github.com/eryalito/pinthenote/internal/models";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faSlash, faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faSlash, faThumbtack, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 
 type CategorySectionProps = {
   category: Category;
@@ -45,6 +45,8 @@ type CategorySectionProps = {
   onEditingNoteColorChange: (value: string) => void;
   onCommitNoteColor: (note: Note, color: string) => void;
   onCancelEditNoteColor: () => void;
+  deletingNoteID: number | null;
+  onRequestDeleteNote: (note: Note) => void;
 };
 
 export default function CategorySection({
@@ -89,6 +91,8 @@ export default function CategorySection({
   onEditingNoteColorChange,
   onCommitNoteColor,
   onCancelEditNoteColor,
+  deletingNoteID,
+  onRequestDeleteNote,
 }: CategorySectionProps) {
   const isEditingCategory = editingCategoryID === category.ID;
   const isEditingCategoryColor = editingCategoryColorID === category.ID;
@@ -236,6 +240,7 @@ export default function CategorySection({
               const isPinning = pinningNoteByID[note.ID] ?? false;
               const isEditing = editingNoteID === note.ID;
               const isEditingNoteColor = editingNoteColorID === note.ID;
+              const isDeletingNote = deletingNoteID === note.ID;
 
               return (
                 <li key={note.ID} className="note-row">
@@ -335,6 +340,16 @@ export default function CategorySection({
                           <FontAwesomeIcon icon={faSlash} className="note-icon-slash" />
                         )}
                       </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="note-delete-btn"
+                      disabled={isDeletingNote}
+                      onClick={() => onRequestDeleteNote(note)}
+                      title={isDeletingNote ? "Deleting" : "Delete note"}
+                      aria-label={isDeletingNote ? "Deleting" : "Delete note"}
+                    >
+                      <FontAwesomeIcon icon={faTrashCan} />
                     </button>
                   </div>
                 </li>

@@ -29,6 +29,10 @@ export function DeleteCategory(id: number): $CancellablePromise<void> {
     return $Call.ByID(3907711498, id);
 }
 
+export function DeleteNote(id: number): $CancellablePromise<void> {
+    return $Call.ByID(2806301726, id);
+}
+
 export function RetrieveCategories(): $CancellablePromise<models$0.Category[]> {
     return $Call.ByID(3010397633).then(($result: any) => {
         return $$createType4($result);

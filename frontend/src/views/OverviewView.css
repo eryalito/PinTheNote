@@ -297,6 +297,49 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.note-delete-btn {
+  border: 1px solid rgba(255, 120, 120, 0.55);
+  background: rgba(255, 120, 120, 0.12);
+  color: inherit;
+  border-radius: 6px;
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  min-width: 34px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-delete-btn:hover {
+  background: rgba(255, 120, 120, 0.24);
+}
+
+.note-delete-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.note-delete-modal {
+  max-width: 420px;
+}
+
+.note-delete-modal-text {
+  margin: 0;
+  line-height: 1.45;
+  color: rgba(245, 247, 251, 0.9);
+}
+
+.note-delete-confirm-btn {
+  border-color: rgba(255, 120, 120, 0.6);
+  background: rgba(255, 120, 120, 0.2);
+}
+
+.note-delete-confirm-btn:hover {
+  background: rgba(255, 120, 120, 0.3);
+}
+
 .note-display-btn:disabled {
   opacity: 0.65;
   cursor: default;

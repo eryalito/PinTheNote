@@ -33,6 +33,8 @@ function OverviewView() {
   const [creatingNoteByCategory, setCreatingNoteByCategory] = useState<Record<number, boolean>>({});
   const [displayingNoteByID, setDisplayingNoteByID] = useState<Record<number, boolean>>({});
   const [pinningNoteByID, setPinningNoteByID] = useState<Record<number, boolean>>({});
+  const [notePendingDelete, setNotePendingDelete] = useState<Note | null>(null);
+  const [deletingNoteID, setDeletingNoteID] = useState<number | null>(null);
   const [openCategories, setOpenCategories] = useState<Record<number, boolean>>({});
   const [notesByCategory, setNotesByCategory] = useState<NotesByCategoryState>({});
   const [loadingNotesByCategory, setLoadingNotesByCategory] = useState<LoadingByCategoryState>({});
@@ -463,6 +465,62 @@ function OverviewView() {
     }
   };
 
+  const onRequestDeleteNote = (note: Note) => {
+    setNotePendingDelete(note);
+  };
+
+  const onCancelDeleteNote = () => {
+    if (deletingNoteID !== null) {
+      return;
+    }
+
+    setNotePendingDelete(null);
+  };
+
+  const onConfirmDeleteNote = async () => {
+    const note = notePendingDelete;
+    if (!note) {
+      return;
+    }
+
+    try {
+      setError(null);
+      setDeletingNoteID(note.ID);
+
+      await Events.Emit("note:window-action", {
+        action: "close",
+        noteId: note.ID,
+      });
+
+      await NotesService.DeleteNote(note.ID);
+
+      setNotesByCategory((prev) => {
+        const next: NotesByCategoryState = { ...prev };
+        for (const key of Object.keys(next)) {
+          const categoryID = Number(key);
+          next[categoryID] = next[categoryID].filter((item) => item.ID !== note.ID);
+        }
+        return next;
+      });
+
+      if (editingNoteID === note.ID) {
+        setEditingNoteID(null);
+        setEditingNoteTitle("");
+      }
+
+      if (editingNoteColorID === note.ID) {
+        setEditingNoteColorID(null);
+        setEditingNoteColor("#FFEBA1");
+      }
+
+      setNotePendingDelete(null);
+    } catch {
+      setError("Failed to delete note.");
+    } finally {
+      setDeletingNoteID(null);
+    }
+  };
+
   return (
     <main className="overview-main">
       <header className="overview-header">
@@ -561,11 +619,47 @@ function OverviewView() {
                   void onCommitNoteColor(noteToEdit, nextColor);
                 }}
                 onCancelEditNoteColor={onCancelEditNoteColor}
+                deletingNoteID={deletingNoteID}
+                onRequestDeleteNote={onRequestDeleteNote}
               />
             );
           })
         )}
       </section>
+
+      {notePendingDelete && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-note-title">
+          <div className="modal note-delete-modal">
+            <h2 id="delete-note-title" className="modal-title">Delete note?</h2>
+            <p className="note-delete-modal-text">
+              This will permanently delete
+              {" "}
+              <strong>{notePendingDelete.title || "Untitled note"}</strong>
+              .
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="overview-button secondary"
+                disabled={deletingNoteID === notePendingDelete.ID}
+                onClick={onCancelDeleteNote}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="overview-button note-delete-confirm-btn"
+                disabled={deletingNoteID === notePendingDelete.ID}
+                onClick={() => {
+                  void onConfirmDeleteNote();
+                }}
+              >
+                {deletingNoteID === notePendingDelete.ID ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CreateCategoryModal
         isOpen={showCreateModal}

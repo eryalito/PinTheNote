@@ -54,7 +54,17 @@ func (r *NoteRepository) Update(note *models.Note) error {
 
 // Delete removes a note by its ID
 func (r *NoteRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Note{}, id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("note_id = ?", id).Delete(&models.WindowState{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&models.Note{}, id).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 // DeleteAll removes all notes (soft delete)

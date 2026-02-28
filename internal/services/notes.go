@@ -41,7 +41,7 @@ func (s *NotesService) CreateNoteInCategory(categoryID uint, color string) (*mod
 		CategoryID: &categoryID,
 		Color:      color,
 		WindowState: &models.WindowState{
-			Width:  200,
+			Width:  325,
 			Height: 200,
 			X:      0,
 			Y:      0,
@@ -61,6 +61,14 @@ func (s *NotesService) CreateNoteInCategory(categoryID uint, color string) (*mod
 
 func (s *NotesService) UpdateNote(note *models.Note) error {
 	return s.NotesRepository.Update(note)
+}
+
+func (s *NotesService) DeleteNote(id uint) error {
+	if s.WindowService != nil {
+		_ = s.WindowService.HandleWindowAction("close", id)
+	}
+
+	return s.NotesRepository.Delete(id)
 }
 
 func (s *NotesService) RetrieveNote(id uint) (*models.Note, error) {
@@ -93,6 +101,17 @@ func (s *NotesService) UpdateCategory(category *models.Category) error {
 }
 
 func (s *NotesService) DeleteCategory(id uint) error {
+	notes, err := s.NotesRepository.GetAllByCategory(&id)
+	if err != nil {
+		return err
+	}
+
+	for _, note := range notes {
+		if err := s.DeleteNote(note.ID); err != nil {
+			return err
+		}
+	}
+
 	return s.CategoryRepository.Delete(id)
 }
 

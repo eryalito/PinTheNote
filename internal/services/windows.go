@@ -45,7 +45,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 		return existingWindow
 	}
 
-	width := 200
+	width := 325
 	height := 200
 	x := 0
 	y := 0
@@ -75,7 +75,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 		Y:                  y,
 		AlwaysOnTop:        pinned,
 		Frameless:          true,
-		MinWidth:           200,
+		MinWidth:           325,
 		MinHeight:          200,
 		ZoomControlEnabled: true,
 		Mac: application.MacWindow{
