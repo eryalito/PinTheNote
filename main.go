@@ -12,6 +12,7 @@ import (
 	"github.com/eryalito/pinthenote/internal/repository"
 	"github.com/eryalito/pinthenote/internal/services"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 // Wails uses Go's `embed` package to embed the frontend files into the binary.
@@ -77,7 +78,7 @@ func main() {
 	// 'Mac' options tailor the window when running on macOS.
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
+	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:    "PinTheNote",
 		MinWidth: 350,
 		Width:    450,
@@ -88,6 +89,10 @@ func main() {
 		},
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		URL:              "/",
+	})
+
+	window.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
+		os.Exit(0)
 	})
 
 	// Load all notes and create a window for each one
