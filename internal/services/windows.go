@@ -84,7 +84,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
 		BackgroundColour: application.NewRGB(r, g, b),
-		URL:              "/note/" + strconv.FormatUint(uint64(note.ID), 10),
+		URL:              "/#/note/" + strconv.FormatUint(uint64(note.ID), 10),
 	})
 
 	s.mu.Lock()
