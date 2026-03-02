@@ -156,13 +156,13 @@ export default function NoteView() {
         });
     };
 
-    const toggleEditMode = async () => {
-        if (!isEditing) {
-            setDraftContent(note.content ?? "");
-            setIsEditing(true);
-            return;
-        }
+    const startEditMode = () => {
+        setDraftContent(note.content ?? "");
+        setIsEditing(true);
+    };
 
+    const cancelEditMode = () => {
+        setDraftContent(note.content ?? "");
         setIsEditing(false);
     };
 
@@ -387,21 +387,19 @@ export default function NoteView() {
                 </div>
 
                 <div className="note-nav-right">
-                    <button
-                        onClick={() => {
-                            void toggleEditMode();
-                        }}
-                        className="note-nav-button"
-                        title={isEditing ? "Cancel" : "Edit"}
-                        aria-label={isEditing ? "Cancel" : "Edit"}
-                    >
-                        <span className="note-edit-icon-stack" aria-hidden="true">
-                            <FontAwesomeIcon icon={faPen} />
-                            {isEditing && (
+                    {isEditing && (
+                        <button
+                            onClick={cancelEditMode}
+                            className="note-nav-button"
+                            title="Cancel"
+                            aria-label="Cancel"
+                        >
+                            <span className="note-edit-icon-stack" aria-hidden="true">
+                                <FontAwesomeIcon icon={faPen} />
                                 <FontAwesomeIcon icon={faSlash} className="note-edit-icon-slash" />
-                            )}
-                        </span>
-                    </button>
+                            </span>
+                        </button>
+                    )}
                     {isEditing && (
                         <button
                             onClick={() => {
@@ -549,12 +547,32 @@ export default function NoteView() {
                 }}
             />
 
-            <div className={`note-content ${isEditing ? "editing" : "viewing"}`}
-                        style={{ transformOrigin: "0% 0%", transform: `scale(${currentZoom})` }}>
+            <div
+                className={`note-content ${isEditing ? "editing" : "viewing"}`}
+                style={{ transformOrigin: "0% 0%", transform: `scale(${currentZoom})` }}
+                onDoubleClick={() => {
+                    if (!isEditing) {
+                        startEditMode();
+                    }
+                }}
+                title={!isEditing ? "Double click to edit" : undefined}
+            >
                 {isEditing ? (
                     <textarea
                         value={draftContent}
                         onChange={(event) => setDraftContent(event.target.value)}
+                        onKeyDown={(event) => {
+                            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+                                event.preventDefault();
+                                void saveDraft();
+                                return;
+                            }
+
+                            if (event.key === "Escape") {
+                                event.preventDefault();
+                                cancelEditMode();
+                            }
+                        }}
                         className="note-textarea"
                     />
                 ) : (
