@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Events } from "@wailsio/runtime";
 import { marked } from "marked";
@@ -36,6 +36,13 @@ export default function NoteView() {
     const [savingColor, setSavingColor] = useState(false);
     const [savingZoom, setSavingZoom] = useState(false);
     const colorInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Compute HTML from markdown content - must be before any conditional returns
+    const htmlContent = useMemo(() => {
+        if (!note?.content) return '';
+        const result = marked.parse(note.content);
+        return typeof result === 'string' ? result : '';
+    }, [note?.content]);
 
     useEffect(() => {
         if (editingColor) {
@@ -553,7 +560,7 @@ export default function NoteView() {
                 ) : (
                     <div
                         className="note-markdown"
-                        dangerouslySetInnerHTML={{ __html: marked(note.content ?? "") }}
+                        dangerouslySetInnerHTML={{ __html: htmlContent }}
                     />
                 )}
             </div>

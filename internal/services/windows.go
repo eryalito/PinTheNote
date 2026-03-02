@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"log"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -66,6 +67,10 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 
 	x, y, width, height = s.normaliseWindowBounds(x, y, width, height)
 
+	// On Linux, frameless windows don't support --wails-resize CSS property properly
+	// So we use native window decorations for proper resize functionality
+	isFrameless := runtime.GOOS != "linux"
+
 	w := s.app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:              note.Title,
 		Width:              width,
@@ -74,7 +79,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 		X:                  x,
 		Y:                  y,
 		AlwaysOnTop:        pinned,
-		Frameless:          true,
+		Frameless:          isFrameless,
 		MinWidth:           325,
 		MinHeight:          200,
 		ZoomControlEnabled: false,
@@ -83,8 +88,25 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
+		Linux:            application.LinuxWindow{},
 		BackgroundColour: application.NewRGB(r, g, b),
 		URL:              "/#/note/" + strconv.FormatUint(uint64(note.ID), 10),
+	})
+
+	// Register event handlers immediately after window creation
+	// NOTE: On Linux (Wails v3.0.0-alpha.74), WindowDidMove events don't fire due to a bug
+	// where window.Bounds() doesn't update X/Y coordinates when the window is moved.
+	// Window positions won't be persisted when moved until this is fixed upstream.
+	w.OnWindowEvent(events.Common.WindowDidMove, func(event *application.WindowEvent) {
+		s.scheduleWindowStatePersist(note.ID, w)
+	})
+
+	w.OnWindowEvent(events.Common.WindowDidResize, func(event *application.WindowEvent) {
+		s.scheduleWindowStatePersist(note.ID, w)
+	})
+
+	w.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
+		s.handleWindowClosing(note.ID)
 	})
 
 	s.mu.Lock()
@@ -104,18 +126,6 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	if err := s.setNoteVisibility(note.ID, true); err != nil {
 		log.Println("failed to persist note visibility:", err)
 	}
-
-	w.OnWindowEvent(events.Common.WindowDidMove, func(event *application.WindowEvent) {
-		s.scheduleWindowStatePersist(note.ID, w)
-	})
-
-	w.OnWindowEvent(events.Common.WindowDidResize, func(event *application.WindowEvent) {
-		s.scheduleWindowStatePersist(note.ID, w)
-	})
-
-	w.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
-		s.handleWindowClosing(note.ID)
-	})
 
 	return w
 }

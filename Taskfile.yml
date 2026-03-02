@@ -12,6 +12,7 @@ vars:
   APP_NAME: "pinthenote"
   BIN_DIR: "bin"
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+  CGO_ENABLED: 1
 
 tasks:
   build:
