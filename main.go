@@ -23,6 +23,9 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+//go:embed build/appicon.png
+var icon []byte
+
 func init() {
 	// Register a custom event whose associated data type is string.
 	// This is not required, but the binding generator will pick up registered events
@@ -60,7 +63,7 @@ func main() {
 			Handler: application.AssetFileServerFS(assets),
 		},
 		Mac: application.MacOptions{
-			ApplicationShouldTerminateAfterLastWindowClosed: true,
+			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 	})
 	windowService := services.NewWindowService(app, noteReposiroty)
@@ -91,8 +94,35 @@ func main() {
 		URL:              "/",
 	})
 
-	window.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
-		os.Exit(0)
+	isQuitting := false
+
+	// Create system tray
+	systray := app.SystemTray.New()
+	systray.SetIcon(icon)
+	systray.SetLabel("PinTheNote")
+	systray.SetTooltip("PinTheNote")
+
+	// systray.OnDoubleClick(restoreWindowFunc)
+	// Add menu
+	menu := app.NewMenu()
+	menu.Add("Show").OnClick(func(ctx *application.Context) {
+		window.Show()
+		window.Restore()
+		window.Focus()
+	})
+	menu.Add("Quit").OnClick(func(ctx *application.Context) {
+		isQuitting = true
+		app.Quit()
+	})
+	systray.SetMenu(menu)
+
+	window.RegisterHook(events.Common.WindowClosing, func(event *application.WindowEvent) {
+		if isQuitting {
+			return
+		}
+
+		event.Cancel()
+		window.Hide()
 	})
 
 	// Load all notes and create a window for each one
