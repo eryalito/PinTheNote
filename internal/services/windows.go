@@ -94,9 +94,10 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	})
 
 	// Register event handlers immediately after window creation
-	// NOTE: On Linux (Wails v3.0.0-alpha.74), WindowDidMove events don't fire due to a bug
-	// where window.Bounds() doesn't update X/Y coordinates when the window is moved.
-	// Window positions won't be persisted when moved until this is fixed upstream.
+	// NOTE: On Linux (Wails v3.0.0-alpha.74), there are known limitations:
+	// 1. WindowDidMove events don't fire - window.Bounds() doesn't update X/Y when moved (GTK bug)
+	// 2. SetAlwaysOnTop() doesn't work on Wayland - compositors restrict this for security
+	//    (works on X11, but Wayland requires users to manually toggle via keybindings)
 	w.OnWindowEvent(events.Common.WindowDidMove, func(event *application.WindowEvent) {
 		s.scheduleWindowStatePersist(note.ID, w)
 	})
@@ -176,6 +177,46 @@ func (s *WindowService) RegisterEventHandlers() {
 		if err := s.HandleWindowAction(action, noteID); err != nil {
 			log.Println("failed to handle note window action:", err)
 		}
+	})
+
+	s.app.Event.On("note:updated", func(event *application.CustomEvent) {
+		payload, ok := event.Data.(map[string]any)
+		if !ok {
+			log.Println("invalid note:updated payload:", event.Data)
+			return
+		}
+
+		noteIDRaw, exists := payload["noteId"]
+		if !exists {
+			log.Println("missing noteId in note:updated payload")
+			return
+		}
+
+		noteIDValue, ok := noteIDRaw.(float64)
+		if !ok || noteIDValue < 0 {
+			log.Println("invalid noteId in note:updated payload:", noteIDRaw)
+			return
+		}
+
+		noteIDUint := uint(noteIDValue)
+
+		// Get the window for this note
+		w, exists := s.GetWindowByNoteID(noteIDUint)
+		if !exists || w == nil {
+			log.Printf("window not found for note %d\n", noteIDUint)
+			return
+		}
+
+		// Fetch the updated note from DB
+		note, err := s.noteRepository.GetByID(noteIDUint)
+		if err != nil {
+			log.Printf("failed to fetch note %d: %v\n", noteIDUint, err)
+			return
+		}
+
+		// Update the window title
+		w.SetTitle(note.Title)
+		log.Printf("updated window title for note %d: %s\n", noteIDUint, note.Title)
 	})
 }
 
