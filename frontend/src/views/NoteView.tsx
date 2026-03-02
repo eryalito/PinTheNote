@@ -309,6 +309,7 @@ export default function NoteView() {
             setDeletingNote(true);
             setError(null);
             await NotesService.DeleteNote(note.ID);
+            await Events.Emit("note:deleted", { noteId: note.ID });
             setShowDeleteModal(false);
         } catch {
             setError("Failed to delete note.");

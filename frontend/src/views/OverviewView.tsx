@@ -91,6 +91,35 @@ function OverviewView() {
 
         return next;
       });
+
+      if (!visible) {
+        void (async () => {
+          try {
+            const existing = await NotesService.RetrieveNote(noteID);
+            if (existing) {
+              return;
+            }
+
+            setNotesByCategory((prev) => {
+              const next: NotesByCategoryState = { ...prev };
+              for (const key of Object.keys(next)) {
+                const categoryID = Number(key);
+                next[categoryID] = next[categoryID].filter((item) => item.ID !== noteID);
+              }
+              return next;
+            });
+          } catch {
+            setNotesByCategory((prev) => {
+              const next: NotesByCategoryState = { ...prev };
+              for (const key of Object.keys(next)) {
+                const categoryID = Number(key);
+                next[categoryID] = next[categoryID].filter((item) => item.ID !== noteID);
+              }
+              return next;
+            });
+          }
+        })();
+      }
     });
 
     return () => {
@@ -190,6 +219,32 @@ function OverviewView() {
           });
         }
       })();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = Events.On("note:deleted", (event: any) => {
+      const payload = event?.data;
+      const noteID = Number(payload?.noteId);
+
+      if (!Number.isFinite(noteID)) {
+        return;
+      }
+
+      setNotesByCategory((prev) => {
+        const next: NotesByCategoryState = { ...prev };
+
+        for (const key of Object.keys(next)) {
+          const categoryID = Number(key);
+          next[categoryID] = next[categoryID].filter((item) => item.ID !== noteID);
+        }
+
+        return next;
+      });
     });
 
     return () => {
@@ -576,6 +631,7 @@ function OverviewView() {
       });
 
       await NotesService.DeleteNote(note.ID);
+      await Events.Emit("note:deleted", { noteId: note.ID });
 
       setNotesByCategory((prev) => {
         const next: NotesByCategoryState = { ...prev };
