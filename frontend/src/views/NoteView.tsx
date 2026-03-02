@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Events } from "@wailsio/runtime";
 import { marked } from "marked";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faPen, faSlash, faThumbtack, faTrashCan, faXmark, faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faSlash, faThumbtack, faTrashCan, faXmark, faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
 import { ContentType, Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import ConfirmModal from "../components/ConfirmModal";
@@ -449,19 +449,6 @@ export default function NoteView() {
                 <div className="note-nav-right">
                     {isEditing && (
                         <button
-                            onClick={cancelEditMode}
-                            className="note-nav-button"
-                            title="Cancel"
-                            aria-label="Cancel"
-                        >
-                            <span className="note-edit-icon-stack" aria-hidden="true">
-                                <FontAwesomeIcon icon={faPen} />
-                                <FontAwesomeIcon icon={faSlash} className="note-edit-icon-slash" />
-                            </span>
-                        </button>
-                    )}
-                    {isEditing && (
-                        <button
                             onClick={() => {
                                 void saveDraft();
                             }}
@@ -475,10 +462,17 @@ export default function NoteView() {
                     )}
 
                     <button
-                        onClick={() => emitWindowAction("close")}
+                        onClick={() => {
+                            if (isEditing) {
+                                cancelEditMode();
+                                return;
+                            }
+
+                            emitWindowAction("close");
+                        }}
                         className="note-nav-button"
-                        title="Close"
-                        aria-label="Close"
+                        title={isEditing ? "Cancel" : "Close"}
+                        aria-label={isEditing ? "Cancel" : "Close"}
                     >
                         <FontAwesomeIcon icon={faXmark} />
                     </button>
