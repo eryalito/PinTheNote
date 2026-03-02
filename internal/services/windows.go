@@ -47,7 +47,7 @@ func (s *WindowService) CreateWindowForNote(note models.Note) *application.Webvi
 	}
 
 	width := 325
-	height := 200
+	height := 325
 	x := 0
 	y := 0
 	pinned := false

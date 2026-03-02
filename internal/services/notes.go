@@ -42,7 +42,7 @@ func (s *NotesService) CreateNoteInCategory(categoryID uint, color string) (*mod
 		Color:      color,
 		WindowState: &models.WindowState{
 			Width:  325,
-			Height: 200,
+			Height: 325,
 			X:      0,
 			Y:      0,
 		},
