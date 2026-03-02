@@ -1,0 +1,45 @@
+<svg
+  width="256"
+  height="256"
+  viewBox="0 0 256 256"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Slight tilt, tighter layout -->
+  <g transform="rotate(-5 128 128)">
+    
+    <!-- Sticky note -->
+    <rect
+      x="36"
+      y="44"
+      width="184"
+      height="184"
+      rx="12"
+      fill="#FFEBA1"
+    />
+
+    <!-- Minimal folded corner -->
+    <path
+      d="M188 44 L220 44 L220 76 Z"
+      fill="#F2DC85"
+    />
+
+    <!-- Minimal pin -->
+    <circle
+      cx="128"
+      cy="40"
+      r="11"
+      fill="#E53935"
+    />
+
+    <!-- Pin stem -->
+    <line
+      x1="128"
+      y1="51"
+      x2="128"
+      y2="66"
+      stroke="#C62828"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+  </g>
+</svg>
