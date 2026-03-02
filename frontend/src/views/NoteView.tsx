@@ -173,6 +173,12 @@ export default function NoteView() {
 
     const isPinned = note.window_state?.pinned === true;
     const currentZoom = note.zoom_multiplier && note.zoom_multiplier > 0 ? note.zoom_multiplier : 1;
+    const zoomScaleStyle = {
+        transformOrigin: "0% 0%",
+        transform: `scale(${currentZoom})`,
+        width: `${100 / currentZoom}%`,
+        minHeight: `${100 / currentZoom}%`,
+    };
 
     const emitWindowAction = (action: "pin" | "close") => {
         void Events.Emit("note:window-action", {
@@ -555,7 +561,7 @@ export default function NoteView() {
                     >
                         <FontAwesomeIcon icon={faArrowRotateLeft} />
                     </button>
-                    
+
                     <button
                         type="button"
                         className="note-footer-zoom-btn"
@@ -615,46 +621,49 @@ export default function NoteView() {
                 }}
             />
 
-            <div
-                className={`note-content ${isEditing ? "editing" : "viewing"}`}
-                style={{ transformOrigin: "0% 0%", transform: `scale(${currentZoom})` }}
-                onDoubleClick={() => {
-                    if (!isEditing) {
-                        startEditMode();
-                    }
-                }}
-                title={!isEditing ? "Double click to edit" : undefined}
-            >
-                {isEditing ? (
-                    <textarea
-                        value={draftContent}
-                        onChange={(event) => setDraftContent(event.target.value)}
-                        onKeyDown={(event) => {
-                            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
-                                event.preventDefault();
-                                void saveDraft();
-                                return;
-                            }
+            <div className="full-size">
+                <div
+                    className={`note-content ${isEditing ? "editing" : "viewing"}`}
+                    onDoubleClick={() => {
+                        if (!isEditing) {
+                            startEditMode();
+                        }
+                    }}
+                    title={!isEditing ? "Double click to edit" : undefined}
+                >
+                    {isEditing ? (
+                        <textarea
+                            value={draftContent}
+                            onChange={(event) => setDraftContent(event.target.value)}
+                            onKeyDown={(event) => {
+                                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+                                    event.preventDefault();
+                                    void saveDraft();
+                                    return;
+                                }
 
-                            if (event.key === "Escape") {
-                                event.preventDefault();
-                                cancelEditMode();
-                            }
-                        }}
-                        className="note-textarea"
-                    />
-                ) : (
-                    contentType === CONTENT_TYPE_PLAIN ? (
-                        <div className="note-markdown" style={{ whiteSpace: "pre-wrap" }}>
-                            {note.content ?? ""}
-                        </div>
-                    ) : (
-                        <div
-                            className="note-markdown"
-                            dangerouslySetInnerHTML={{ __html: renderedHtmlContent }}
+                                if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    cancelEditMode();
+                                }
+                            }}
+                            className="note-textarea"
                         />
-                    )
-                )}
+                    ) : (
+                        <div className="note-content-scale" style={zoomScaleStyle}>
+                            {contentType === CONTENT_TYPE_PLAIN ? (
+                                <div className="note-markdown" style={{ whiteSpace: "pre-wrap" }}>
+                                    {note.content ?? ""}
+                                </div>
+                            ) : (
+                                <div
+                                    className="note-markdown"
+                                    dangerouslySetInnerHTML={{ __html: renderedHtmlContent }}
+                                />
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </main>
     );
