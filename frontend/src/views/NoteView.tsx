@@ -5,13 +5,24 @@ import { marked } from "marked";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faPen, faSlash, faThumbtack, faTrashCan, faXmark, faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
-import { Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
+import { ContentType, Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import ConfirmModal from "../components/ConfirmModal";
 import "./NoteView.css";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
+const CONTENT_TYPE_PLAIN = ContentType.ContentTypePlain;
+const CONTENT_TYPE_MARKDOWN = ContentType.ContentTypeMarkdown;
+const CONTENT_TYPE_HTML = ContentType.ContentTypeHTML;
+
+const normalizeContentType = (value: ContentType | string | undefined): ContentType => {
+    if (value === CONTENT_TYPE_MARKDOWN || value === CONTENT_TYPE_HTML || value === CONTENT_TYPE_PLAIN) {
+        return value;
+    }
+
+    return CONTENT_TYPE_PLAIN;
+};
 
 const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
 const roundZoom = (value: number) => Number(value.toFixed(1));
@@ -35,14 +46,28 @@ export default function NoteView() {
     const [draftColor, setDraftColor] = useState("#FFEBA1");
     const [savingColor, setSavingColor] = useState(false);
     const [savingZoom, setSavingZoom] = useState(false);
+    const [savingContentType, setSavingContentType] = useState(false);
     const colorInputRef = useRef<HTMLInputElement | null>(null);
 
-    // Compute HTML from markdown content - must be before any conditional returns
-    const htmlContent = useMemo(() => {
-        if (!note?.content) return '';
-        const result = marked.parse(note.content);
-        return typeof result === 'string' ? result : '';
-    }, [note?.content]);
+    const contentType = normalizeContentType(note?.content_type);
+
+    const renderedHtmlContent = useMemo(() => {
+        const content = note?.content ?? "";
+        if (!content) {
+            return "";
+        }
+
+        if (contentType === CONTENT_TYPE_HTML) {
+            return content;
+        }
+
+        if (contentType === CONTENT_TYPE_MARKDOWN) {
+            const result = marked.parse(content);
+            return typeof result === "string" ? result : "";
+        }
+
+        return "";
+    }, [note?.content, contentType]);
 
     useEffect(() => {
         if (editingColor) {
@@ -286,6 +311,34 @@ export default function NoteView() {
         }
     };
 
+    const updateContentType = async (nextContentType: ContentType | string) => {
+        if (savingContentType) {
+            return;
+        }
+
+        const normalizedNext = normalizeContentType(nextContentType);
+
+        const previousContentType = normalizeContentType(note.content_type);
+        if (normalizedNext === previousContentType) {
+            return;
+        }
+
+        const optimisticNote = new Note({ ...note, content_type: normalizedNext });
+        setNote(optimisticNote);
+
+        try {
+            setSavingContentType(true);
+            setError(null);
+            await NotesService.UpdateNote(optimisticNote);
+            await Events.Emit("note:updated", { noteId: note.ID });
+        } catch {
+            setNote(new Note({ ...note, content_type: previousContentType }));
+            setError("Failed to update content type.");
+        } finally {
+            setSavingContentType(false);
+        }
+    };
+
     const resetZoom = async () => {
         if (savingZoom || currentZoom === 1) {
             return;
@@ -515,6 +568,21 @@ export default function NoteView() {
                     >
                         <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
                     </button>
+
+                    <select
+                        className="note-footer-content-type-select"
+                        value={contentType}
+                        onChange={(event) => {
+                            void updateContentType(event.target.value);
+                        }}
+                        disabled={savingContentType}
+                        title="Content type"
+                        aria-label="Content type"
+                    >
+                        <option value={CONTENT_TYPE_PLAIN}>Text</option>
+                        <option value={CONTENT_TYPE_MARKDOWN}>Markdown</option>
+                        <option value={CONTENT_TYPE_HTML}>HTML</option>
+                    </select>
                 </div>
 
                 <div className="note-footer-right">
@@ -576,10 +644,16 @@ export default function NoteView() {
                         className="note-textarea"
                     />
                 ) : (
-                    <div
-                        className="note-markdown"
-                        dangerouslySetInnerHTML={{ __html: htmlContent }}
-                    />
+                    contentType === CONTENT_TYPE_PLAIN ? (
+                        <div className="note-markdown" style={{ whiteSpace: "pre-wrap" }}>
+                            {note.content ?? ""}
+                        </div>
+                    ) : (
+                        <div
+                            className="note-markdown"
+                            dangerouslySetInnerHTML={{ __html: renderedHtmlContent }}
+                        />
+                    )
                 )}
             </div>
         </main>

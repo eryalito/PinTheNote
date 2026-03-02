@@ -4,6 +4,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type ContentType string
+
+const (
+	ContentTypePlain    ContentType = "text/plain"
+	ContentTypeMarkdown ContentType = "text/markdown"
+	ContentTypeHTML     ContentType = "text/html"
+)
+
 type Note struct {
 	gorm.Model
 	Title          string       `gorm:"column:title;size:255;not null" json:"title"`
@@ -11,6 +19,7 @@ type Note struct {
 	Color          string       `gorm:"column:color;size:20;not null;default:'#FFEBA1'" json:"color"`
 	ZoomMultiplier float64      `gorm:"column:zoom_multiplier;not null;default:1.0" json:"zoom_multiplier"`
 	TextColor      string       `gorm:"column:text_color;size:20;not null;default:'#000000'" json:"text_color"`
+	ContentType    ContentType  `gorm:"column:content_type;size:50;not null;default:'text/plain'" json:"content_type"`
 	CategoryID     *uint        `gorm:"column:category_id" json:"category_id"`
 	Category       *Category    `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL" json:"category"`
 	WindowState    *WindowState `gorm:"foreignKey:NoteID;constraint:OnDelete:CASCADE" json:"window_state"`

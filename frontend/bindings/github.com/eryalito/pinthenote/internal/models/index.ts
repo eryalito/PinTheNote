@@ -3,6 +3,7 @@
 
 export {
     Category,
+    ContentType,
     Note,
     WindowState
 } from "./models.js";

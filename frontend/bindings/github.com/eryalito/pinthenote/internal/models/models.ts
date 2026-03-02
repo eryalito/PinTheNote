@@ -53,6 +53,17 @@ export class Category {
     }
 }
 
+export enum ContentType {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    ContentTypePlain = "text/plain",
+    ContentTypeMarkdown = "text/markdown",
+    ContentTypeHTML = "text/html",
+};
+
 export class Note {
     "ID": number;
     "CreatedAt": time$0.Time;
@@ -63,6 +74,7 @@ export class Note {
     "color": string;
     "zoom_multiplier": number;
     "text_color": string;
+    "content_type": ContentType;
     "category_id": number | null;
     "category": Category | null;
     "window_state": WindowState | null;
@@ -96,6 +108,9 @@ export class Note {
         if (!("text_color" in $$source)) {
             this["text_color"] = "";
         }
+        if (!("content_type" in $$source)) {
+            this["content_type"] = ContentType.$zero;
+        }
         if (!("category_id" in $$source)) {
             this["category_id"] = null;
         }
@@ -113,14 +128,14 @@ export class Note {
      * Creates a new Note instance from a string or object.
      */
     static createFrom($$source: any = {}): Note {
-        const $$createField10_0 = $$createType1;
-        const $$createField11_0 = $$createType3;
+        const $$createField11_0 = $$createType1;
+        const $$createField12_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("category" in $$parsedSource) {
-            $$parsedSource["category"] = $$createField10_0($$parsedSource["category"]);
+            $$parsedSource["category"] = $$createField11_0($$parsedSource["category"]);
         }
         if ("window_state" in $$parsedSource) {
-            $$parsedSource["window_state"] = $$createField11_0($$parsedSource["window_state"]);
+            $$parsedSource["window_state"] = $$createField12_0($$parsedSource["window_state"]);
         }
         return new Note($$parsedSource as Partial<Note>);
     }
