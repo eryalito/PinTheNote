@@ -26,6 +26,12 @@ var assets embed.FS
 //go:embed build/appicon.png
 var icon []byte
 
+var (
+	Version   = "dev"
+	Commit    = "none"
+	BuildDate = "unknown"
+)
+
 func init() {
 	// Register a custom event whose associated data type is string.
 	// This is not required, but the binding generator will pick up registered events
@@ -59,6 +65,15 @@ func main() {
 	app := application.New(application.Options{
 		Name:        "PinTheNote",
 		Description: "A simple note app with floating windows",
+		Services: []application.Service{
+			application.NewService(&services.VersionService{
+				DetailedVersionInfo: services.DetailedVersionInfo{
+					Version:   Version,
+					Commit:    Commit,
+					BuildDate: BuildDate,
+				},
+			}),
+		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},

@@ -58,8 +58,20 @@ jobs:
         shell: bash
         run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
+      - name: Compute build metadata
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          COMMIT="${GITHUB_SHA}"
+          BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "COMMIT=$COMMIT" >> "$GITHUB_ENV"
+          echo "BUILD_DATE=$BUILD_DATE" >> "$GITHUB_ENV"
+
       - name: Build app
-        run: task build
+        shell: bash
+        run: task build VERSION="$VERSION" COMMIT="$COMMIT" BUILD_DATE="$BUILD_DATE"
 
       - name: Prepare artifact (Windows)
         if: runner.os == 'Windows'

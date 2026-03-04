@@ -13,17 +13,25 @@ vars:
   BIN_DIR: "bin"
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
   CGO_ENABLED: 1
+  VERSION: '{{.VERSION | default "dev"}}'
+  COMMIT: '{{.COMMIT | default "none"}}'
+  BUILD_DATE: '{{.BUILD_DATE | default "unknown"}}'
+  BUILD_META_LDFLAGS: '-X main.Version={{.VERSION}} -X main.Commit={{.COMMIT}} -X main.BuildDate={{.BUILD_DATE}}'
 
 tasks:
   build:
     summary: Builds the application
     cmds:
       - task: "{{OS}}:build"
+        vars:
+          EXTRA_LDFLAGS: '{{.BUILD_META_LDFLAGS}}'
 
   package:
     summary: Packages a production build of the application
     cmds:
       - task: "{{OS}}:package"
+        vars:
+          EXTRA_LDFLAGS: '{{.BUILD_META_LDFLAGS}}'
 
   run:
     summary: Runs the application
@@ -44,6 +52,8 @@ tasks:
     summary: Builds the application in server mode (no GUI, HTTP server only)
     cmds:
       - task: common:build:server
+        vars:
+          BUILD_FLAGS: '-ldflags="{{.BUILD_META_LDFLAGS}}"'
 
   run:server:
     summary: Runs the application in server mode

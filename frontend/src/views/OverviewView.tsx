@@ -3,6 +3,7 @@ import { Events } from "@wailsio/runtime";
 import { NotesService } from "../../bindings/github.com/eryalito/pinthenote/internal/services";
 import { Category, Note, WindowState } from "../../bindings/github.com/eryalito/pinthenote/internal/models";
 import ConfirmModal from "../components/ConfirmModal";
+import AboutModal from "./overview/components/AboutModal";
 import CategorySection from "./overview/components/CategorySection";
 import CreateCategoryModal from "./overview/components/CreateCategoryModal";
 import "./OverviewView.css";
@@ -37,6 +38,7 @@ function OverviewView() {
   const [pinningNoteByID, setPinningNoteByID] = useState<Record<number, boolean>>({});
   const [notePendingDelete, setNotePendingDelete] = useState<Note | null>(null);
   const [deletingNoteID, setDeletingNoteID] = useState<number | null>(null);
+  const [showAboutModal, setShowAboutModal] = useState(false);
   const [openCategories, setOpenCategories] = useState<Record<number, boolean>>({});
   const [notesByCategory, setNotesByCategory] = useState<NotesByCategoryState>({});
   const [loadingNotesByCategory, setLoadingNotesByCategory] = useState<LoadingByCategoryState>({});
@@ -766,6 +768,12 @@ function OverviewView() {
         )}
       </section>
 
+      <div className="overview-meta">
+        <button type="button" className="overview-link-button" onClick={() => setShowAboutModal(true)}>
+          About
+        </button>
+      </div>
+
       <ConfirmModal
         isOpen={notePendingDelete !== null}
         title="Delete note?"
@@ -812,6 +820,8 @@ function OverviewView() {
         onClose={() => setShowCreateModal(false)}
         onSubmit={onSubmitCreateCategory}
       />
+
+      <AboutModal isOpen={showAboutModal} onClose={() => setShowAboutModal(false)} />
     </main>
   );
 }

@@ -1,5 +1,8 @@
 .overview-main {
+  height: 100vh;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(180deg, #1b2636 0%, #162132 100%);
   color: #f5f7fb;
   padding: 18px;
@@ -77,6 +80,31 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.overview-meta {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+.overview-link-button {
+  border: none;
+  background: transparent;
+  color: rgba(245, 247, 251, 0.78);
+  font-size: 0.78rem;
+  padding: 4px 2px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.overview-link-button:hover {
+  color: rgba(245, 247, 251, 0.95);
 }
 
 .overview-empty {
