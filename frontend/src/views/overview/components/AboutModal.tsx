@@ -67,7 +67,8 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
   }, [isOpen]);
 
   const version = versionInfo?.version?.trim() || "unknown";
-  const commit = versionInfo?.commit?.trim() || "unknown";
+  const commitRaw = versionInfo?.commit?.trim() || "unknown";
+  const commit = commitRaw === "unknown" ? commitRaw : commitRaw.slice(0, 7);
   const buildDate = versionInfo?.buildDate?.trim() || "unknown";
 
   const onBackdropClick = (event: MouseEvent<HTMLDialogElement>) => {
