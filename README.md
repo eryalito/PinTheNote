@@ -1,59 +1,57 @@
-# Welcome to Your New Wails3 Project!
+# PinTheNote
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+PinTheNote is a desktop sticky-notes app focused on quick capture and clean organization.
+Create notes inside categories, open them as floating windows, and pin important notes to stay always on top while you work.
 
-## Getting Started
+## Screenshots
 
-1. Navigate to your project directory in the terminal.
+![Overview - Categories and notes](docs/screenshots/overview.png)
 
-2. To run your application in development mode, use the following command:
+## Core Features
 
-   ```
-   wails3 dev
-   ```
+- Category-based organization for notes.
+- Floating sticky-note windows per note.
+- Pin / unpin notes as **always-on-top** windows.
+- Show or hide note windows from the main overview.
+- In-place note editing with quick keyboard shortcuts.
+- Per-note and per-category color customization.
+- Note content modes: plain text, Markdown, or HTML.
+- Note zoom controls for better readability.
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+## Downloads
 
-3. To build your application for production, use:
+Prebuilt binaries are available from GitHub Releases:
 
-   ```
-   wails3 build
-   ```
+- Windows
+- Linux
+- macOS
 
-   This will create a production-ready executable in the `build` directory.
+➡️ [Download latest release](https://github.com/eryalito/pinthenote/releases/latest)
 
-## Exploring Wails3 Features
+## Run in Development
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+### Requirements
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
+- Go
+- Node.js
+- Wails v3 CLI
 
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
+### Start
 
-   ```
-   go run .
-   ```
+```bash
+wails3 dev
+```
 
-   Note: Some examples may be under development during the alpha phase.
+## Build
 
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
+```bash
+wails3 build
+```
 
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
+The resulting binaries are generated in the `build/` directory.
 
-## Project Structure
+## Tech Stack
 
-Take a moment to familiarize yourself with your project structure:
-
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
-
-## Next Steps
-
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
-
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+- Go (backend)
+- Wails v3 (desktop runtime)
+- React + TypeScript (frontend)
