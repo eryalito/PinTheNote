@@ -203,6 +203,7 @@ export default function NoteView() {
                 setSaving(true);
                 const updatedNote = new Note({ ...note, content: draftContent });
                 await NotesService.UpdateNote(updatedNote);
+                await Events.Emit("note:updated", { noteId: note.ID });
                 setNote(updatedNote);
             } catch {
                 setError("Failed to save note.");

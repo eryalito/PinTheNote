@@ -522,7 +522,12 @@ function OverviewView() {
     try {
       setError(null);
       setSavingRename(true);
-      const updatedNote = new Note({ ...note, title: nextTitle });
+      const latestNote = await NotesService.RetrieveNote(note.ID);
+      if (!latestNote) {
+        throw new Error("Note not found");
+      }
+
+      const updatedNote = new Note({ ...latestNote, title: nextTitle });
       await NotesService.UpdateNote(updatedNote);
       await Events.Emit("note:updated", { noteId: note.ID });
 
@@ -578,7 +583,12 @@ function OverviewView() {
     try {
       setError(null);
       setSavingNoteColor(true);
-      const updatedNote = new Note({ ...note, color: nextColor });
+      const latestNote = await NotesService.RetrieveNote(note.ID);
+      if (!latestNote) {
+        throw new Error("Note not found");
+      }
+
+      const updatedNote = new Note({ ...latestNote, color: nextColor });
       await NotesService.UpdateNote(updatedNote);
       await Events.Emit("note:updated", { noteId: note.ID });
 
