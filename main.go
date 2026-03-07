@@ -3,12 +3,14 @@ package main
 import (
 	"embed"
 	_ "embed"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/eryalito/pinthenote/internal/database"
+	"github.com/eryalito/pinthenote/internal/locks"
 	"github.com/eryalito/pinthenote/internal/repository"
 	"github.com/eryalito/pinthenote/internal/services"
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -48,7 +50,22 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to get home directory:", err)
 	}
-	dbPath := filepath.Join(homeDir, ".pinthenote", "app.db")
+
+	appDir := filepath.Join(homeDir, ".pinthenote")
+	if err := os.MkdirAll(appDir, 0700); err != nil {
+		log.Fatal("Failed to create app directory:", err)
+	}
+	ln, cleanup, err := locks.TryAcquireInstance(appDir)
+	if err != nil {
+		if errors.Is(err, locks.ErrAlreadyRunning) {
+			os.Exit(0)
+		}
+		log.Fatal(err)
+	}
+	defer cleanup()
+	defer ln.Close()
+
+	dbPath := filepath.Join(appDir, "app.db")
 	db, err := database.InitDB(dbPath)
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
@@ -139,6 +156,20 @@ func main() {
 		event.Cancel()
 		window.Hide()
 	})
+
+	// Accept connections from any second instance attempting to raise the window.
+	go func() {
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				return // listener closed on shutdown
+			}
+			conn.Close()
+			window.Show()
+			window.Restore()
+			window.Focus()
+		}
+	}()
 
 	// Load all notes and create a window for each one
 
